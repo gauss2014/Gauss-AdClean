@@ -10,13 +10,16 @@ ROOT = Path(__file__).resolve().parents[1]
 MODULES = ROOT / "modules"
 FORBIDDEN = (
     "script-path=http://",
-    "script-path=https://",
     "ca-p12",
     "ca-passphrase",
     "BEGIN PRIVATE KEY",
     "BEGIN CERTIFICATE",
     "Authorization:",
     "Cookie:",
+)
+TRUSTED_SCRIPT_PATTERN = re.compile(
+    r"^script-path=https://raw\.githubusercontent\.com/"
+    r"Gauss2014/Gauss-AdClean/v\d+\.\d+\.\d+/scripts/[^,\s]+$"
 )
 
 
@@ -28,6 +31,10 @@ def validate_module(path: Path) -> list[str]:
     for marker in FORBIDDEN:
         if marker.lower() in text.lower():
             errors.append(f"forbidden marker: {marker}")
+
+    for script_url in re.findall(r"script-path=https://[^,\s]+", text, flags=re.I):
+        if not TRUSTED_SCRIPT_PATTERN.fullmatch(script_url):
+            errors.append(f"untrusted remote script: {script_url}")
 
     host_lines = re.findall(r"^hostname\s*=.*$", text, flags=re.M | re.I)
     if host_lines and any("%APPEND%" not in line for line in host_lines):
