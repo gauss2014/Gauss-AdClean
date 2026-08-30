@@ -8,11 +8,11 @@
 
 - `https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/modules/Gauss-AdClean.sgmodule`
 
-手机只需启用这一项。以后更新时，在 Shadowrocket 的模块页面刷新远程模块即可，不需要重新传文件或重装证书。
+手机只需启用这一项。以后更新时，在 Shadowrocket 的模块页面刷新远程模块即可，不需要重新传文件。若当前配置重新生成了 CA，仍须在 iOS 中重新安装并信任该证书。
 
 ## HTTPS 解密
 
-包含 `[MITM]` 的规则需要在当前 Shadowrocket 配置中开启 HTTPS 解密，并使用手机已经安装和信任的 Shadowrocket CA。仓库不会提供、接收或保存 CA 私钥。
+包含 `[MITM]` 的规则需要在当前 Shadowrocket 配置中开启 HTTPS 解密，并使用手机已经安装和信任的 Shadowrocket CA。CA 信任按证书区分；切换到重新签发 CA 的配置后必须重新安装并信任。仓库不会提供、接收或保存 CA 私钥。
 
 ## 反馈流程
 
