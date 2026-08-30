@@ -1,0 +1,14 @@
+#!name=Gauss JD Structure Diagnostic
+#!desc=临时只读诊断：仅记录京东响应中命中目标关键词的JSON路径与字段名，不修改响应，不记录字段值；完成一次采集后停用
+#!author=Gauss2014 local audit
+#!version=0.1.0
+#!homepage=https://github.com/Gauss2014/Gauss-AdClean
+#!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/diagnostics/Gauss-JD-Structure-Diagnostic.sgmodule
+
+[Script]
+JD_Structure_Diagnostic = type=http-response,pattern=^https?:\/\/(api\.m\.jd\.com\/(client\.action|api)?|ms\.jr\.jd\.com\/gw2?\/),requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/diagnostics/jd-structure-diagnostic.js
+
+[MITM]
+enable = true
+h2 = true
+hostname = %APPEND% api.m.jd.com,ms.jr.jd.com
