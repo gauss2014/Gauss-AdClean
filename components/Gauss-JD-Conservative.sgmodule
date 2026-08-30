@@ -3,7 +3,7 @@
 #!author=Gauss2014 local audit
 #!version=0.1.0
 #!homepage=https://github.com/Gauss2014/Gauss-AdClean
-#!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/modules/Gauss-JD-Conservative.sgmodule
+#!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/components/Gauss-JD-Conservative.sgmodule
 
 [URL Rewrite]
 # 京东广告投放与明确广告素材

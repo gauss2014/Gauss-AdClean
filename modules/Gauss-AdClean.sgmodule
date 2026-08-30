@@ -1,11 +1,23 @@
-#!name=Gauss AdClean Advanced
-#!desc=可选增强版：人工筛选静态广告规则与广告字段改写；无远程脚本、无解锁、无金融认证域名
+#!name=Gauss AdClean
+#!desc=单一常驻模块：去广告规则、京东保守补丁与系统功能实验层；无远程脚本、证书或会员解锁
 #!author=Gauss2014 local audit
-#!version=0.2.0
+#!version=0.3.0
 #!homepage=https://github.com/Gauss2014/Gauss-AdClean
-#!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/modules/Gauss-AdClean-Advanced.sgmodule
+#!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/modules/Gauss-AdClean.sgmodule
 
 [Rule]
+# Component: Gauss-AdClean-Core
+# 中国电信
+DOMAIN, ad.21cn.com, REJECT
+DOMAIN, ad.k.21cn.com, REJECT
+DOMAIN, admarket.21cn.com, REJECT
+DOMAIN, adshows.21cn.com, REJECT
+IP-CIDR, 122.229.8.47/32, REJECT, no-resolve
+IP-CIDR, 122.229.29.89/32, REJECT, no-resolve
+# 深圳通
+DOMAIN-SUFFIX, wxsnsdythumb.wxs.qq.com, REJECT
+
+# Component: Gauss-AdClean-Advanced
 # 拼多多
 AND, ((URL-REGEX,"^http:\/\/((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/d(\d)?"),(USER-AGENT,"*com.xunmeng.pinduoduo*")), REJECT
 AND, ((URL-REGEX,"^http:\/\/\[((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))\]\/d(\d)?\?"),(USER-AGENT,"*com.xunmeng.pinduoduo*")), REJECT
@@ -20,6 +32,66 @@ DOMAIN, hc-ssp.sm.cn, REJECT
 DOMAIN, kad.gotokeep.com, REJECT
 
 [URL Rewrite]
+# Component: Gauss-AdClean-Core
+# 中国电信
+^https?:\/\/cloud\.189\.cn\/include\/splash\/ - reject
+^https?:\/\/zt-app\.go189\.cn\/zt-app\/welcome\/.*?Animation - reject-img
+# 中国知网
+^https?:\/\/xyz\.cnki\.net\/resourcev7\/api\/manualpush\/SlidsList$ - reject-200
+# 中通快递
+^https?:\/\/hdgateway\.zto\.com\/getAdInfo - reject-dict
+^https?:\/\/hdgateway\.zto\.com\/getApolloConfig - reject-dict
+^https?:\/\/hdgateway\.zto\.com\/listJumperShow - reject-dict
+^https?:\/\/hdgateway\.zto\.com\/track - reject-dict
+# 华住会
+^https?:\/\/appapi\.huazhu\.com:\d+\/client\/app\/getAppStartPage\/ - reject
+^https?:\/\/hweb-hotel\.huazhu\.com\/home\/queryRecommond - reject-dict
+^https?:\/\/hweb-hotel\.huazhu\.com\/{1,2}home\/(queryNewNotice|querySelectHotel|queryHotelBrand|queryMall|huazhuWorld) - reject-200
+^https?:\/\/hweb-manager\.huazhu\.com\/bundle\/upgrade\/check - reject-dict
+^https?:\/\/hweb-manager\.huazhu\.com\/hotels\/ad\/ - reject-dict
+^https?:\/\/hweb-manager\.huazhu\.com\/notice\/getAppPopupNotifyAlert - reject-dict
+# 南方航空
+^https?:\/\/3g\.csair\.com\/CSMBP\/bookProcess\/homepopup\/queryAdvertisement - reject-200
+^https?:\/\/3g\.csair\.com\/CSMBP\/data\/homePage\/getLaunchInfoNew - reject-dict
+^https?:\/\/3g\.csair\.com\/CSMBP\/personalCenter\/ads\/getEasterEggTaskOrAds - reject-dict
+^https?:\/\/3g\.csair\.com\/CSMBP\/personalCenter\/peronsalCenterAds\/getAdvertMcmsNew - reject
+^https?:\/\/3g\.csair\.com\/CSMBP\/promotion\/personalCenterAds - reject-dict
+^https?:\/\/3g\.csair\.com\/extraClient\/data\/mytrip\/getMinPriceFlight - reject-dict
+^https?:\/\/3g\.csair\.com\/extraClient\/data\/mytrip\/getTripAdvertisement - reject-dict
+^https?:\/\/3g\.csair\.com\/extraClient\/data\/preSelecteSeat\/xproduct\/getXProductList - reject-dict
+# 哈啰 小程序
+^https?:\/\/api\.hellobike\.com\/api\?adx - reject-dict
+# 星巴克 小程序
+^https?:\/\/3pp\.starbucks\.com\.cn\/wxmem\/index\/(banner|global) - reject-dict
+^https?:\/\/3pp\.starbucks\.com\.cn\/wxmem\/popup - reject-dict
+# 水印相机
+^https?:\/\/api\.xiangji\.qq\.com\/splash$ - reject-dict
+# 淘宝闪购 小程序
+^https?:\/\/waimai-guide\.ele\.me\/h5\/mtop\.ele\.growth\.fission\.client\.etmd\.et\.getmainpageicon - reject-dict
+# 深圳通
+^https?:\/\/ecard\.shenzhentong\.com\/wxweb\/bwxppub2\/QryAdvertList\.do - reject-200
+# 爱思助手
+^https?:\/\/list-app-m\.i4\.cn\/(adclickcb|getHotSearchList|getopfstadinfo)\.xhtml - reject
+# 美团外卖
+^https?:\/\/p\d\.meituan\.net\/cell - reject
+^https?:\/\/s3plus\.meituan\.net\/v\d\/mss_\w+\/goku\/(lottie|lucency) - reject-img
+^https?:\/\/wmapi\.meituan\.com\/api\/v\d+\/(loadInfo|openscreen|startpicture) - reject
+# 肯德基 小程序
+^https?:\/\/dynamicad\.kfc\.com\.cn\/api - reject-dict
+^https?:\/\/res\.kfc\.com\.cn\/CRM\/kfcad\/custom_v\d\/wxapp - reject-dict
+# 腾讯文档
+^https?:\/\/h5\.qzone\.qq\.com\/p\/adboss\/api\/json\/ts_access\/GetAds$ - reject-dict
+^https?:\/\/tianshu\.qq\.com\/open\/ts_access\/GetAds\? - reject-dict
+# 贝壳找房
+^https?:\/\/apps\.api\.ke\.com\/config\/config\/(bootpage|getactivityconfig) - reject
+# Boss直聘
+^https?:\/\/api-ios\.zhipin\.com\/api\/zpCommon\/upgrade\/check - reject-dict
+^https?:\/\/api-ios\.zhipin\.com\/api\/zpCommon\/user\/startupAd - reject-dict
+^https?:\/\/apm-ios\.zhipin\.com\/api\/zpApm\/ios\/gray\/release\/check - reject-dict
+# DJI Store (大疆商城)
+^https?:\/\/se-api\.djiits\.com\/api\/components\/launch_ad\.json\?abbrv_url=1&country=cn&language=zh-CN - reject-dict
+
+# Component: Gauss-AdClean-Advanced
 # 京东
 ^https?:\/\/(bdsp-x|dsp-x)\.jd\.com\/adx\/ - reject-200
 ^https?:\/\/img\d+\.360buyimg\.com\/jddjadvertise\/ - reject
@@ -88,7 +160,17 @@ DOMAIN, kad.gotokeep.com, REJECT
 # 知乎
 ^https?:\/\/api\.zhihu\.com\/commercial_api(?:\/.*)? - reject-dict
 
+# Component: Gauss-JD-Conservative
+# 京东广告投放与明确广告素材
+^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=queryMaterialAdverts(?:&|$) - reject-200
+
+# 京东金融：仅启动图和广告信息，不拦截首页数据、导航、登录或支付
+^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/aladdin\/(new)?na\/m\/getLoadingPicture(?:\?|$) - reject-200
+^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/app\/(new)?na\/m\/getLaunchImageList(?:\?|$) - reject-dict
+^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/base\/(new)?na\/m\/adInfo(?:\?|$) - reject-200
+
 [Body Rewrite]
+# Component: Gauss-AdClean-Advanced
 # 微博轻享版
 http-response-jq ^https?:\/\/api\.weibo\.cn\/2\/cardlist\?aid= '.cards |= map(select((.mblog?|(.ad_marked?|type=="boolean")and.ad_marked==true)or(.card_group?|type=="array"and any(.[]?;.mblog?|(.ad_marked?|type=="boolean")and.ad_marked==true))|not))'
 http-response-jq ^https?:\/\/api\.weibo\.cn\/2\/statuses\/friends\/timeline$ '.statuses|=map(select(.ad_marked!=true))'
@@ -157,5 +239,9 @@ http-response-jq ^https?:\/\/api\.gotokeep\.com\/op-engine-webapp\/v1\/configs$ 
 # Reddit
 http-response-jq ^https?:\/\/gql(-fed)?\.reddit\.com 'walk(if type == "object" then (if (.commentsPageAds | type == "array") then .commentsPageAds = [] else . end) | (if ((.node | type == "object") and (.node.cells | type == "array") and (.node.cells | any(.__typename? == "AdMetadataCell" or .isAdPost? == true))) then empty else . end) | (if ((.node | type == "object") and (.node.adPayload | type == "object")) then empty else . end) | (if .__typename == "AdPost" then empty else . end) else . end)'
 
+[Script]
+# Component: Gauss-System-Extras
+Compass_Coordinates = type=http-response,pattern=^https?://gspe\d*-ssl\.ls\.apple\.com/pep/gcc,requires-body=1,max-size=0,script-text=let body = "US"; $done({body});
+
 [MITM]
-hostname = %APPEND% bdsp-x.jd.com,dsp-x.jd.com,img*.360buyimg.com,api.weibo.cn,bootpreload.uve.weibo.com,weibointl.api.weibo.cn,api.pinduoduo.com,acs.m.taobao.com,guide-acs.m.taobao.com,act.vip.iqiyi.com,iface2.iqiyi.com,kjp.cupid.iqiyi.com,t7z.cupid.iqiyi.com,cards.iqiyi.com,capi.lkcoffee.com,m.lkcoffee.com,img0*.luckincoffeecdn.com,interface*.music.163.com,ipv4.music.163.com,img.meituan.net,p*.meituan.net,sqt.meituan.com,cn-acs.m.cainiao.com,netflow-mtop.cainiao.com,acs.m.goofish.com,g-acs.m.goofish.com,shopping.ele.me,waimai-guide.ele.me,m5.amap.com,m5-zb.amap.com,center.amap.com,amap-aos-info-nogw.amap.com,ai.amap.com,api.gotokeep.com,gql-fed.reddit.com,gql.reddit.com,mp.weixin.qq.com,ad.12306.cn,api-sams.walmartmobile.cn,apiproxy.zuche.com,api.zhihu.com
+hostname = %APPEND% cloud.189.cn,zt-app.go189.cn,xyz.cnki.net,hdgateway.zto.com,appapi.huazhu.com,hweb-hotel.huazhu.com,hweb-manager.huazhu.com,3g.csair.com,api.hellobike.com,3pp.starbucks.com.cn,api.xiangji.qq.com,waimai-guide.ele.me,ecard.shenzhentong.com,list-app-m.i4.cn,p*.meituan.net,s3plus.meituan.net,wmapi.meituan.com,dynamicad.kfc.com.cn,res.kfc.com.cn,h5.qzone.qq.com,tianshu.qq.com,apps.api.ke.com,api-ios.zhipin.com,apm-ios.zhipin.com,se-api.djiits.com,bdsp-x.jd.com,dsp-x.jd.com,img*.360buyimg.com,api.weibo.cn,bootpreload.uve.weibo.com,weibointl.api.weibo.cn,api.pinduoduo.com,acs.m.taobao.com,guide-acs.m.taobao.com,act.vip.iqiyi.com,iface2.iqiyi.com,kjp.cupid.iqiyi.com,t7z.cupid.iqiyi.com,cards.iqiyi.com,capi.lkcoffee.com,m.lkcoffee.com,img0*.luckincoffeecdn.com,interface*.music.163.com,ipv4.music.163.com,img.meituan.net,sqt.meituan.com,cn-acs.m.cainiao.com,netflow-mtop.cainiao.com,acs.m.goofish.com,g-acs.m.goofish.com,shopping.ele.me,m5.amap.com,m5-zb.amap.com,center.amap.com,amap-aos-info-nogw.amap.com,ai.amap.com,api.gotokeep.com,gql-fed.reddit.com,gql.reddit.com,mp.weixin.qq.com,ad.12306.cn,api-sams.walmartmobile.cn,apiproxy.zuche.com,api.zhihu.com,api.m.jd.com,ms.jr.jd.com,gspe*-ssl.ls.apple.com

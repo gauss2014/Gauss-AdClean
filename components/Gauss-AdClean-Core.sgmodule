@@ -1,9 +1,9 @@
 #!name=Gauss AdClean Core
 #!desc=保守常驻版：仅静态拒绝与URL改写，无远程脚本、无金融认证域名、无会员解锁
 #!author=Gauss2014 local audit
-#!version=0.2.0
+#!version=0.2.1
 #!homepage=https://github.com/Gauss2014/Gauss-AdClean
-#!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/modules/Gauss-AdClean-Core.sgmodule
+#!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/components/Gauss-AdClean-Core.sgmodule
 
 [Rule]
 # 中国电信
@@ -66,8 +66,6 @@ DOMAIN-SUFFIX, wxsnsdythumb.wxs.qq.com, REJECT
 # 腾讯文档
 ^https?:\/\/h5\.qzone\.qq\.com\/p\/adboss\/api\/json\/ts_access\/GetAds$ - reject-dict
 ^https?:\/\/tianshu\.qq\.com\/open\/ts_access\/GetAds\? - reject-dict
-# 谷歌广告
-^https?:\/\/www\.google\.com\/ads - reject-dict
 # 贝壳找房
 ^https?:\/\/apps\.api\.ke\.com\/config\/config\/(bootpage|getactivityconfig) - reject
 # Boss直聘
@@ -78,4 +76,4 @@ DOMAIN-SUFFIX, wxsnsdythumb.wxs.qq.com, REJECT
 ^https?:\/\/se-api\.djiits\.com\/api\/components\/launch_ad\.json\?abbrv_url=1&country=cn&language=zh-CN - reject-dict
 
 [MITM]
-hostname = %APPEND% cloud.189.cn,zt-app.go189.cn,xyz.cnki.net,hdgateway.zto.com,appapi.huazhu.com,hweb-hotel.huazhu.com,hweb-manager.huazhu.com,3g.csair.com,api.hellobike.com,3pp.starbucks.com.cn,api.xiangji.qq.com,waimai-guide.ele.me,ecard.shenzhentong.com,list-app-m.i4.cn,p*.meituan.net,s3plus.meituan.net,wmapi.meituan.com,dynamicad.kfc.com.cn,res.kfc.com.cn,h5.qzone.qq.com,tianshu.qq.com,www.google.com,apps.api.ke.com,api-ios.zhipin.com,apm-ios.zhipin.com,se-api.djiits.com
+hostname = %APPEND% cloud.189.cn,zt-app.go189.cn,xyz.cnki.net,hdgateway.zto.com,appapi.huazhu.com,hweb-hotel.huazhu.com,hweb-manager.huazhu.com,3g.csair.com,api.hellobike.com,3pp.starbucks.com.cn,api.xiangji.qq.com,waimai-guide.ele.me,ecard.shenzhentong.com,list-app-m.i4.cn,p*.meituan.net,s3plus.meituan.net,wmapi.meituan.com,dynamicad.kfc.com.cn,res.kfc.com.cn,h5.qzone.qq.com,tianshu.qq.com,apps.api.ke.com,api-ios.zhipin.com,apm-ios.zhipin.com,se-api.djiits.com
