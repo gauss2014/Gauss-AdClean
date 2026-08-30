@@ -1,7 +1,7 @@
 #!name=Gauss JD Conservative
 #!desc=京东保守去广告与界面精简：仅处理明确广告、活动弹窗、游戏和钱包营销入口；不修改会员、登录、支付或钱包核心数据
 #!author=Gauss2014 local audit
-#!version=0.2.0
+#!version=0.3.0
 #!homepage=https://github.com/Gauss2014/Gauss-AdClean
 #!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/components/Gauss-JD-Conservative.sgmodule
 
@@ -11,17 +11,25 @@
 ^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=queryMaterialAdverts(?:&|$) - reject-200
 ^https?:\/\/img\d+\.360buyimg\.com\/jddjadvertise\/ - reject
 
-# 京东主App：冷启动弹窗、首页“二楼”和游戏入口
+# 京东主App：冷启动弹窗和首页“二楼”
 ^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=(queryPagePopWindow|secondFloor)(?:&|$) - reject-dict
-^https?:\/\/api\.m\.jd\.com\/api\?functionId=(giftBombCheck|interactGameRewardJudge|weGameIcon)(?:&|$) - reject-dict
 
 # 京东金融：仅启动图和广告信息，不拦截首页数据、导航、登录或支付
 ^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/aladdin\/(new)?na\/m\/getLoadingPicture(?:\?|$) - reject-200
 ^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/app\/(new)?na\/m\/getLaunchImageList(?:\?|$) - reject-dict
 ^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/base\/(new)?na\/m\/adInfo(?:\?|$) - reject-200
 
-# 钱包：仅营销入口；保留钱包首页、余额、登录、RSA与支付链路
-^https?:\/\/ms\.jr\.jd\.com\/gw2\/generic\/wealth-marketing-component\/h5\/m\/walletEntryQuery(?:\?|$) - reject-dict
+
+[Body Rewrite]
+# 京东15.10.50实测：删除游戏数据和带明确垃圾入口标题的动态卡片；保留订单、商品与支付数据
+http-response-jq ^https?:\/\/api\.m\.jd\.com\/(client\.action|api)$ 'def unwanted: test("京东游戏|小游戏|玩一玩|游戏中心|借钱|借款|贷款|白条|金条|短视频|视频号|直播"; "i"); walk(if type == "object" then del(.gameLatelyList?, .playGamePointRecordsResponse?, .newGameVoList?) elif type == "array" then map(select(([.[]? | select(type == "string") | select(unwanted)] | length) == 0)) else . end)'
+http-response-jq ^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=(welcomeHome|personinfoBusiness|getTabHomeInfo)(?:&|$) 'def unwanted: test("京东游戏|小游戏|玩一玩|游戏中心|借钱|借款|贷款|白条|金条|短视频|视频号|直播"; "i"); walk(if type == "object" then del(.gameLatelyList?, .playGamePointRecordsResponse?, .newGameVoList?) elif type == "array" then map(select(([.[]? | select(type == "string") | select(unwanted)] | length) == 0)) else . end) | if (.floorList? | type) == "array" then .floorList |= map(select(([.. | objects | keys[] | select(test("^(liveInfo1|liveInfo2|leftLiveJson|rightLiveJson)$"))] | length) == 0)) else . end'
+
+# 钱包：删除借贷、弹窗和悬浮营销模块；保留资产、账单、充值、登录、RSA与支付链路
+http-response-jq ^https?:\/\/ms\.jr\.jd\.com\/gw2\/generic\/MyWalletS\/newh5\/m\/myWalletIndex(?:\?|$) 'def unwanted: test("借钱|借款|贷款|白条|金条|理财|loan|credit"; "i"); del(.resultData.data.moduleSortedMap.CASH_LOAN_V3, .resultData.data.moduleSortedMap.ATMOSPHERE_BANNER_V3, .resultData.data.moduleSortedMap.POPUP_DECISION_V3, .resultData.data.moduleSortedMap.SUSPENSION_ICON_V3) | walk(if type == "array" then map(select(([.[]? | select(type == "string") | select(unwanted)] | length) == 0)) else . end)'
+http-response-jq ^https?:\/\/ms\.jr\.jd\.com\/gw2\/generic\/MyWalletS\/newh5\/m\/myWalletIndexAsyncData(?:\?|$) 'del(.resultData.data.jtDkInfo)'
+http-response-jq ^https?:\/\/ms\.jr\.jd\.com\/gw2\/generic\/wealth-marketing-component\/h5\/m\/walletEntryQuery(?:\?|$) 'def unwanted: test("借钱|借款|贷款|白条|金条|理财|loan|credit"; "i"); if (.resultData.data.items? | type) == "array" then .resultData.data.items |= map(select(([.[]? | select(type == "string") | select(unwanted)] | length) == 0)) else . end'
+http-response-jq ^https?:\/\/ms\.jr\.jd\.com\/gw2\/generic\/jkActivity\/newh5\/m\/queryDeliveryChannelInfo(?:\?|$) '.resultData.data.isShowFeed = false | .resultData.data.isShowBanner = false | .resultData.data.bannerMaxNum = 0'
 
 [MITM]
 hostname = %APPEND% api.m.jd.com,bdsp-x.jd.com,dsp-x.jd.com,img*.360buyimg.com,ms.jr.jd.com
