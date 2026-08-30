@@ -1,0 +1,81 @@
+#!name=Gauss AdClean Core
+#!desc=保守常驻版：仅静态拒绝与URL改写，无远程脚本、无金融认证域名、无会员解锁
+#!author=Gauss2014 local audit
+#!version=0.2.0
+#!homepage=https://github.com/Gauss2014/Gauss-AdClean
+#!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/modules/Gauss-AdClean-Core.sgmodule
+
+[Rule]
+# 中国电信
+DOMAIN, ad.21cn.com, REJECT
+DOMAIN, ad.k.21cn.com, REJECT
+DOMAIN, admarket.21cn.com, REJECT
+DOMAIN, adshows.21cn.com, REJECT
+IP-CIDR, 122.229.8.47/32, REJECT, no-resolve
+IP-CIDR, 122.229.29.89/32, REJECT, no-resolve
+# 深圳通
+DOMAIN-SUFFIX, wxsnsdythumb.wxs.qq.com, REJECT
+
+[URL Rewrite]
+# 中国电信
+^https?:\/\/cloud\.189\.cn\/include\/splash\/ - reject
+^https?:\/\/zt-app\.go189\.cn\/zt-app\/welcome\/.*?Animation - reject-img
+# 中国知网
+^https?:\/\/xyz\.cnki\.net\/resourcev7\/api\/manualpush\/SlidsList$ - reject-200
+# 中通快递
+^https?:\/\/hdgateway\.zto\.com\/getAdInfo - reject-dict
+^https?:\/\/hdgateway\.zto\.com\/getApolloConfig - reject-dict
+^https?:\/\/hdgateway\.zto\.com\/listJumperShow - reject-dict
+^https?:\/\/hdgateway\.zto\.com\/track - reject-dict
+# 华住会
+^https?:\/\/appapi\.huazhu\.com:\d+\/client\/app\/getAppStartPage\/ - reject
+^https?:\/\/hweb-hotel\.huazhu\.com\/home\/queryRecommond - reject-dict
+^https?:\/\/hweb-hotel\.huazhu\.com\/{1,2}home\/(queryNewNotice|querySelectHotel|queryHotelBrand|queryMall|huazhuWorld) - reject-200
+^https?:\/\/hweb-manager\.huazhu\.com\/bundle\/upgrade\/check - reject-dict
+^https?:\/\/hweb-manager\.huazhu\.com\/hotels\/ad\/ - reject-dict
+^https?:\/\/hweb-manager\.huazhu\.com\/notice\/getAppPopupNotifyAlert - reject-dict
+# 南方航空
+^https?:\/\/3g\.csair\.com\/CSMBP\/bookProcess\/homepopup\/queryAdvertisement - reject-200
+^https?:\/\/3g\.csair\.com\/CSMBP\/data\/homePage\/getLaunchInfoNew - reject-dict
+^https?:\/\/3g\.csair\.com\/CSMBP\/personalCenter\/ads\/getEasterEggTaskOrAds - reject-dict
+^https?:\/\/3g\.csair\.com\/CSMBP\/personalCenter\/peronsalCenterAds\/getAdvertMcmsNew - reject
+^https?:\/\/3g\.csair\.com\/CSMBP\/promotion\/personalCenterAds - reject-dict
+^https?:\/\/3g\.csair\.com\/extraClient\/data\/mytrip\/getMinPriceFlight - reject-dict
+^https?:\/\/3g\.csair\.com\/extraClient\/data\/mytrip\/getTripAdvertisement - reject-dict
+^https?:\/\/3g\.csair\.com\/extraClient\/data\/preSelecteSeat\/xproduct\/getXProductList - reject-dict
+# 哈啰 小程序
+^https?:\/\/api\.hellobike\.com\/api\?adx - reject-dict
+# 星巴克 小程序
+^https?:\/\/3pp\.starbucks\.com\.cn\/wxmem\/index\/(banner|global) - reject-dict
+^https?:\/\/3pp\.starbucks\.com\.cn\/wxmem\/popup - reject-dict
+# 水印相机
+^https?:\/\/api\.xiangji\.qq\.com\/splash$ - reject-dict
+# 淘宝闪购 小程序
+^https?:\/\/waimai-guide\.ele\.me\/h5\/mtop\.ele\.growth\.fission\.client\.etmd\.et\.getmainpageicon - reject-dict
+# 深圳通
+^https?:\/\/ecard\.shenzhentong\.com\/wxweb\/bwxppub2\/QryAdvertList\.do - reject-200
+# 爱思助手
+^https?:\/\/list-app-m\.i4\.cn\/(adclickcb|getHotSearchList|getopfstadinfo)\.xhtml - reject
+# 美团外卖
+^https?:\/\/p\d\.meituan\.net\/cell - reject
+^https?:\/\/s3plus\.meituan\.net\/v\d\/mss_\w+\/goku\/(lottie|lucency) - reject-img
+^https?:\/\/wmapi\.meituan\.com\/api\/v\d+\/(loadInfo|openscreen|startpicture) - reject
+# 肯德基 小程序
+^https?:\/\/dynamicad\.kfc\.com\.cn\/api - reject-dict
+^https?:\/\/res\.kfc\.com\.cn\/CRM\/kfcad\/custom_v\d\/wxapp - reject-dict
+# 腾讯文档
+^https?:\/\/h5\.qzone\.qq\.com\/p\/adboss\/api\/json\/ts_access\/GetAds$ - reject-dict
+^https?:\/\/tianshu\.qq\.com\/open\/ts_access\/GetAds\? - reject-dict
+# 谷歌广告
+^https?:\/\/www\.google\.com\/ads - reject-dict
+# 贝壳找房
+^https?:\/\/apps\.api\.ke\.com\/config\/config\/(bootpage|getactivityconfig) - reject
+# Boss直聘
+^https?:\/\/api-ios\.zhipin\.com\/api\/zpCommon\/upgrade\/check - reject-dict
+^https?:\/\/api-ios\.zhipin\.com\/api\/zpCommon\/user\/startupAd - reject-dict
+^https?:\/\/apm-ios\.zhipin\.com\/api\/zpApm\/ios\/gray\/release\/check - reject-dict
+# DJI Store (大疆商城)
+^https?:\/\/se-api\.djiits\.com\/api\/components\/launch_ad\.json\?abbrv_url=1&country=cn&language=zh-CN - reject-dict
+
+[MITM]
+hostname = %APPEND% cloud.189.cn,zt-app.go189.cn,xyz.cnki.net,hdgateway.zto.com,appapi.huazhu.com,hweb-hotel.huazhu.com,hweb-manager.huazhu.com,3g.csair.com,api.hellobike.com,3pp.starbucks.com.cn,api.xiangji.qq.com,waimai-guide.ele.me,ecard.shenzhentong.com,list-app-m.i4.cn,p*.meituan.net,s3plus.meituan.net,wmapi.meituan.com,dynamicad.kfc.com.cn,res.kfc.com.cn,h5.qzone.qq.com,tianshu.qq.com,www.google.com,apps.api.ke.com,api-ios.zhipin.com,apm-ios.zhipin.com,se-api.djiits.com

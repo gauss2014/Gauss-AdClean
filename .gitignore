@@ -1,0 +1,10 @@
+*.pcap
+*.pcapng
+*.har
+*.mitm
+*.pem
+*.cer
+*.p12
+*.key
+*.log
+.DS_Store

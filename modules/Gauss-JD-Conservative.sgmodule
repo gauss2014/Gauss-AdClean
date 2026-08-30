@@ -1,0 +1,20 @@
+#!name=Gauss JD Conservative
+#!desc=京东保守去广告补丁：仅拦截语义明确的广告接口；不修改会员、登录、支付、金融导航或通用素材域名
+#!author=Gauss2014 local audit
+#!version=0.1.0
+#!homepage=https://github.com/Gauss2014/Gauss-AdClean
+#!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/modules/Gauss-JD-Conservative.sgmodule
+
+[URL Rewrite]
+# 京东广告投放与明确广告素材
+^https?:\/\/(bdsp-x|dsp-x)\.jd\.com\/adx\/ - reject-200
+^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=queryMaterialAdverts(?:&|$) - reject-200
+^https?:\/\/img\d+\.360buyimg\.com\/jddjadvertise\/ - reject
+
+# 京东金融：仅启动图和广告信息，不拦截首页数据、导航、登录或支付
+^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/aladdin\/(new)?na\/m\/getLoadingPicture(?:\?|$) - reject-200
+^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/app\/(new)?na\/m\/getLaunchImageList(?:\?|$) - reject-dict
+^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/base\/(new)?na\/m\/adInfo(?:\?|$) - reject-200
+
+[MITM]
+hostname = %APPEND% api.m.jd.com,bdsp-x.jd.com,dsp-x.jd.com,img*.360buyimg.com,ms.jr.jd.com

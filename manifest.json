@@ -1,0 +1,28 @@
+{
+  "release": "0.2.1",
+  "repository": "https://github.com/Gauss2014/Gauss-AdClean",
+  "modules": [
+    {
+      "name": "Gauss AdClean Core",
+      "version": "0.2.0",
+      "path": "modules/Gauss-AdClean-Core.sgmodule"
+    },
+    {
+      "name": "Gauss AdClean Advanced",
+      "version": "0.2.0",
+      "path": "modules/Gauss-AdClean-Advanced.sgmodule"
+    },
+    {
+      "name": "Gauss JD Conservative",
+      "version": "0.1.0",
+      "path": "modules/Gauss-JD-Conservative.sgmodule"
+    },
+    {
+      "name": "Gauss System Extras",
+      "version": "0.2.0",
+      "path": "modules/Gauss-System-Extras.sgmodule"
+    }
+  ],
+  "contains_remote_scripts": false,
+  "contains_credentials_or_ca": false
+}

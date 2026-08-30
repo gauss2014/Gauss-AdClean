@@ -1,0 +1,12 @@
+#!name=Gauss System Extras
+#!desc=可选系统功能恢复：仅将Apple Geo区域响应改为US，用于恢复指南针经纬度/海拔显示候选
+#!author=Gauss2014 local audit
+#!version=0.2.0
+#!homepage=https://github.com/Gauss2014/Gauss-AdClean
+#!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/modules/Gauss-System-Extras.sgmodule
+
+[Script]
+Compass_Coordinates = type=http-response,pattern=^https?://gspe\d*-ssl\.ls\.apple\.com/pep/gcc,requires-body=1,max-size=0,script-text=let body = "US"; $done({body});
+
+[MITM]
+hostname = %APPEND% gspe*-ssl.ls.apple.com
