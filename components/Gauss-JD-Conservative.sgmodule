@@ -1,7 +1,7 @@
 #!name=Gauss JD Conservative
 #!desc=京东保守去广告与界面精简：仅处理明确广告、活动弹窗、游戏和钱包营销入口；不修改会员、登录、支付或钱包核心数据
 #!author=Gauss2014 local audit
-#!version=0.4.0
+#!version=0.4.1
 #!homepage=https://github.com/Gauss2014/Gauss-AdClean
 #!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/components/Gauss-JD-Conservative.sgmodule
 
@@ -12,6 +12,8 @@
 ^https?:\/\/img\d+\.360buyimg\.com\/jddjadvertise\/ - reject
 
 # 京东主App：冷启动弹窗和首页“二楼”
+^https?:\/\/api\.m\.jd\.com\/api\?functionId=delivery_show(?:&|$) - reject-dict
+^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=home_launchConfig(?:&|$) - reject-dict
 ^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=(queryPagePopWindow|secondFloor)(?:&|$) - reject-dict
 
 # 京东金融：仅启动图和广告信息，不拦截首页数据、导航、登录或支付
