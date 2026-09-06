@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "modules" / "Gauss-AdClean.sgmodule"
-VERSION = "0.3.5"
+VERSION = "0.4.0"
 COMPONENTS = (
     ROOT / "components" / "Gauss-AdClean-Core.sgmodule",
     ROOT / "components" / "Gauss-AdClean-Advanced.sgmodule",
@@ -47,7 +47,7 @@ def render() -> str:
     parsed = [(path, parse_component(path)) for path in COMPONENTS]
     output = [
         "#!name=Gauss AdClean",
-        "#!desc=单一常驻模块：去广告规则、京东保守补丁与系统功能实验层；仅使用本仓库审计脚本，无证书或会员解锁",
+        "#!desc=去广告优先：强化闲鱼、淘宝、京东、美团开屏与营销拦截，允许部分功能失效；不改分流与证书",
         "#!author=Gauss2014 local audit",
         f"#!version={VERSION}",
         "#!homepage=https://github.com/Gauss2014/Gauss-AdClean",

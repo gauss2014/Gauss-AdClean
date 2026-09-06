@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0
+
+- Fix query-order dependence for the existing JD splash endpoints.
+- Aggressively block Xianyu MTOP splash, popup and marketing endpoints, including
+  idlecommerce.splash, across gateway variants; sacrifice recommendation feeds.
+- Extend Taobao advertising endpoints and block creative/video asset paths.
+- Block Meituan startup/appstatus paths even without an ad query parameter,
+  and broaden named advertising asset paths across image and video formats.
+- Add JD lite_advertising/homeAreaPop and promotional asset paths. App features,
+  including recommendations, video and promotional product images, may break.
+- Add offline matching regression cases. These cases do not establish the cause
+  of the latest phone-side regression; current cold-start logs are still needed.
+- Do not change proxy routing, DNS or the CA. Keep the existing version-pinned
+  first-party response script; no new remote executable dependency is added.
+
 ## 0.3.5 - 2026-09-01
 
 - 恢复淘宝、京东、闲鱼和美团主应用的精确开屏广告接口，修复停用旧启动页大合集后开屏广告回归。

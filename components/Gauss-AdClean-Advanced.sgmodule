@@ -1,7 +1,7 @@
 #!name=Gauss AdClean Advanced
-#!desc=可选增强版：人工筛选静态广告规则与广告字段改写；无远程脚本、无解锁、无金融认证域名
+#!desc=去广告优先：扩大淘宝、闲鱼和美团开屏、弹窗、营销及素材拦截；可能影响推荐、视频和活动功能
 #!author=Gauss2014 local audit
-#!version=0.2.0
+#!version=0.4.0
 #!homepage=https://github.com/Gauss2014/Gauss-AdClean
 #!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/components/Gauss-AdClean-Advanced.sgmodule
 
@@ -29,6 +29,13 @@ DOMAIN, kad.gotokeep.com, REJECT
 ^https?:\/\/bootpreload\.uve\.weibo\.com\/v1\/ad\/preload$ - reject-dict
 ^https?:\/\/weibointl\.api\.weibo\.cn\/portal\.php\?a=get_searching_info - reject-dict
 # 淘宝
+# Aggressive: shared MTOP gateways and named advertising/marketing API segments.
+^https?:\/\/(?:(?:(?:g|guide)-)?acs|h5api)\.m\.taobao\.com\/(?:gw|h5)\/mtop\.(?:[a-z0-9_]+\.)*(?:splash[a-z0-9_]*|ads?|advert[a-z0-9_]*|popup|popwindow|marketing)(?:\.[a-z0-9_]+)*(?:\/|\?|$) - reject-dict
+^https?:\/\/(?:(?:(?:g|guide)-)?acs|h5api)\.m\.taobao\.com\/(?:gw|h5)\/mtop\.(?:fc\.resource\.tacdata\.get|taobao\.volvo\.secondfloor\.getconfig|taobao\.wireless\.home\.newface\.awesome\.get)(?:\/|\?|$) - reject-dict
+# Creative assets and promotional video; video previews may also disappear.
+^https?:\/\/ossgw\.alicdn\.com\/creatives-assets\/ - reject-200
+^https?:\/\/cloud\.video\.taobao\.com\/(?:vod|play)\/ - reject-200
+^https?:\/\/(?:img|gw|heic)\.alicdn\.com\/imgextra\/[^/?]+\/[^?]*-at[^/?]*(?:\?|$) - reject-img
 ^https?:\/\/acs\.m\.taobao\.com\/gw\/mtop\.alibaba\.advertisementservice\.getadv - reject-dict
 ^https?:\/\/guide-acs\.m\.taobao\.com\/gw\/mtop\.taobao\.wireless\.home\.splash\.awesome\.get(?:\/|\?|$) - reject-dict
 ^https?:\/\/acs\.m\.taobao\.com\/gw\/mtop\.alibaba\.aicloud\.splash(?:\/|\?|$) - reject-dict
@@ -51,11 +58,10 @@ DOMAIN, kad.gotokeep.com, REJECT
 # 网易云音乐
 ^https?:\/\/(ipv4|interface\d?)\.music\.163.com\/w?e?api\/ad - reject-dict
 # 美团
-^https?:\/\/(www|wmapi)\.meituan\.com\/api\/v\d+\/(openscreen|appstatus)\?ad(?:[=&].*)?$ - reject-dict
-^https?:\/\/(www|wmapi)\.meituan\.com\/api\/v\d+\/(loadInfo|startpicture)(?:\?.*)?$ - reject-dict
-^https?:\/\/img\.meituan\.net\/(adunion|display|midas)\/.+\.(gif|jpg)\.webp$ - reject-img
-^https?:\/\/img\.meituan\.net\/bizad - reject
-^https?:\/\/p\d\.meituan\.net\/(display|mmc)\/ - reject
+# Deliberately block appstatus without requiring an ad query parameter.
+^https?:\/\/(?:www|wmapi)\.meituan\.com\/api\/v\d+\/(?:openscreen|appstatus|loadInfo|startpicture)(?:\/?\?|\/?$) - reject-dict
+^https?:\/\/(?:img|p\d+)\.meituan\.net\/(?:adunion|display|midas|bizad|brandCpt|wmbanner|mmc)(?:\/|\?|$) - reject-200
+^https?:\/\/(?:s3plus|flowplus)\.meituan\.net\/v\d+\/[^/?]+\/(?:linglong|brandcpt-vedio|goku\/lottie|goku\/lucency)(?:\/|\?|$) - reject-200
 ^https?:\/\/sqt\.meituan\.com\/s\/gateway\/mweb\/api\/marketingResource\/show - reject
 # 菜鸟裹裹
 ^https?:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.adkeyword\.get - reject-dict
@@ -65,13 +71,11 @@ DOMAIN, kad.gotokeep.com, REJECT
 ^https?:\/\/guide-acs\.m\.taobao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads - reject-dict
 ^https?:\/\/netflow-mtop\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads - reject-dict
 # 闲鱼
-^https?:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.item\.buy\.feeds\/ - reject-dict
-^https?:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.item\.recommend\.list\/ - reject-dict
-^https?:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.local\.near\.by\.corner\.info\/ - reject-dict
-^https?:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.playboy\.recommend\/ - reject-dict
-^https?:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.user\.strategy\.list\/ - reject-dict
-^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.[^\/?]*splash\.ads(?:\/|\?|$) - reject-dict
-^https?:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlemtopsearch\.search\.shade\/ - reject-dict
+# Includes idlecommerce.splash, not only the older splash.ads form.
+^https?:\/\/(?:(?:g|guide)-)?acs\.m\.goofish\.com\/(?:gw|h5)\/mtop\.(?:[a-z0-9_]+\.)*(?:splash[a-z0-9_]*|ads?|advert[a-z0-9_]*|popup|popwindow|marketing)(?:\.[a-z0-9_]+)*(?:\/|\?|$) - reject-dict
+# Recommendation feeds and search suggestions are intentionally sacrificed.
+^https?:\/\/(?:(?:g|guide)-)?acs\.m\.goofish\.com\/(?:gw|h5)\/mtop\.taobao\.idle\.(?:item\.buy\.feeds|item\.recommend\.list|local\.near\.by\.corner\.info|playboy\.recommend|user\.strategy\.list|home\.welcome)(?:\/|\?|$) - reject-dict
+^https?:\/\/(?:(?:g|guide)-)?acs\.m\.goofish\.com\/(?:gw|h5)\/mtop\.taobao\.idlemtopsearch\.search\.shade(?:\/|\?|$) - reject-dict
 # 饿了么 小程序
 ^https?:\/\/shopping\.ele\.me\/(gw|h5)\/mtop\.o2o\.ad\.exposure\.get - reject-dict
 ^https?:\/\/waimai-guide\.ele\.me\/(gw|h5)\/mtop\.alsc\.eleme\.trigger\.respond - reject
@@ -162,4 +166,4 @@ http-response-jq ^https?:\/\/api\.gotokeep\.com\/op-engine-webapp\/v1\/configs$ 
 http-response-jq ^https?:\/\/gql(-fed)?\.reddit\.com 'walk(if type == "object" then (if (.commentsPageAds | type == "array") then .commentsPageAds = [] else . end) | (if ((.node | type == "object") and (.node.cells | type == "array") and (.node.cells | any(.__typename? == "AdMetadataCell" or .isAdPost? == true))) then empty else . end) | (if ((.node | type == "object") and (.node.adPayload | type == "object")) then empty else . end) | (if .__typename == "AdPost" then empty else . end) else . end)'
 
 [MITM]
-hostname = %APPEND% bdsp-x.jd.com,dsp-x.jd.com,img*.360buyimg.com,api.weibo.cn,bootpreload.uve.weibo.com,weibointl.api.weibo.cn,api.pinduoduo.com,acs.m.taobao.com,guide-acs.m.taobao.com,act.vip.iqiyi.com,iface2.iqiyi.com,kjp.cupid.iqiyi.com,t7z.cupid.iqiyi.com,cards.iqiyi.com,capi.lkcoffee.com,m.lkcoffee.com,img0*.luckincoffeecdn.com,interface*.music.163.com,ipv4.music.163.com,www.meituan.com,img.meituan.net,p*.meituan.net,sqt.meituan.com,cn-acs.m.cainiao.com,netflow-mtop.cainiao.com,acs.m.goofish.com,g-acs.m.goofish.com,shopping.ele.me,waimai-guide.ele.me,m5.amap.com,m5-zb.amap.com,center.amap.com,amap-aos-info-nogw.amap.com,ai.amap.com,api.gotokeep.com,gql-fed.reddit.com,gql.reddit.com,mp.weixin.qq.com,ad.12306.cn,api-sams.walmartmobile.cn,apiproxy.zuche.com,api.zhihu.com
+hostname = %APPEND% bdsp-x.jd.com,dsp-x.jd.com,img*.360buyimg.com,api.weibo.cn,bootpreload.uve.weibo.com,weibointl.api.weibo.cn,api.pinduoduo.com,acs.m.taobao.com,guide-acs.m.taobao.com,act.vip.iqiyi.com,iface2.iqiyi.com,kjp.cupid.iqiyi.com,t7z.cupid.iqiyi.com,cards.iqiyi.com,capi.lkcoffee.com,m.lkcoffee.com,img0*.luckincoffeecdn.com,interface*.music.163.com,ipv4.music.163.com,www.meituan.com,img.meituan.net,p*.meituan.net,sqt.meituan.com,cn-acs.m.cainiao.com,netflow-mtop.cainiao.com,acs.m.goofish.com,g-acs.m.goofish.com,shopping.ele.me,waimai-guide.ele.me,m5.amap.com,m5-zb.amap.com,center.amap.com,amap-aos-info-nogw.amap.com,ai.amap.com,api.gotokeep.com,gql-fed.reddit.com,gql.reddit.com,mp.weixin.qq.com,ad.12306.cn,api-sams.walmartmobile.cn,apiproxy.zuche.com,api.zhihu.com,g-acs.m.taobao.com,h5api.m.taobao.com,guide-acs.m.goofish.com,ossgw.alicdn.com,cloud.video.taobao.com,img.alicdn.com,gw.alicdn.com,heic.alicdn.com,wmapi.meituan.com,s3plus.meituan.net,flowplus.meituan.net

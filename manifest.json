@@ -1,13 +1,13 @@
 {
-  "release": "0.3.5",
+  "release": "0.4.0",
   "repository": "https://github.com/Gauss2014/Gauss-AdClean",
   "modules": [
     {
       "name": "Gauss AdClean",
-      "version": "0.3.5",
+      "version": "0.4.0",
       "path": "modules/Gauss-AdClean.sgmodule"
     }
   ],
-  "contains_remote_scripts": false,
+  "contains_remote_scripts": true,
   "contains_credentials_or_ca": false
 }
