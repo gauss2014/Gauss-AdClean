@@ -16,3 +16,4 @@ jobs:
           python3 tools/build_module.py --check
           python3 tools/validate.py
           python3 tools/test_splash_rules.py
+          node --test tools/test_xianyu_splash.js

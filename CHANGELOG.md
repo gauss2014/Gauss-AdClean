@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.1 - 2026-11-02
+
+- Handle exact Xianyu splash APIs with a version-pinned first-party response
+  script instead of rejecting them before response cleanup.
+- Clear known cacheAd/cacheAdInfo/dspList and nested advertising containers;
+  preserve response envelopes and unknown fields. Malformed input passes through.
+- Add exact advertising scene-restore, launch-report and exposure endpoints,
+  plus explicit gw/h5api gateway coverage. No gateway-wide reject or MITM wildcard.
+- Keep other apps, existing JD script, routing, DNS and certificates unchanged.
+- Add response-fixture, reject/script precedence, MITM coverage and business-path
+  regression tests. Phone-side cold-start acceptance remains pending.
+
 ## 0.4.0
 
 - Fix query-order dependence for the existing JD splash endpoints.

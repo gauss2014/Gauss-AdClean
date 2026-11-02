@@ -25,12 +25,20 @@ class SplashRules(unittest.TestCase):
         cls.patterns = rewrite_patterns()
         host_line = next(line for line in render().splitlines() if line.startswith("hostname = "))
         cls.mitm_hosts = host_line.split("%APPEND%", 1)[1].strip().split(",")
+        script_line = next(line for line in render().splitlines()
+                           if line.startswith("gauss-xianyu-splash = "))
+        cls.splash_script = re.compile(script_line.split("pattern=", 1)[1]
+                                      .split(",requires-body=", 1)[0])
 
     def blocked(self, url):
         return any(pattern.search(url) for pattern in self.patterns)
 
     def assert_blocked(self, url):
         self.assertTrue(self.blocked(url), url)
+        self.assertTrue(any(fnmatchcase(urlsplit(url).hostname, host) for host in self.mitm_hosts), url)
+
+    def assert_filtered(self, url):
+        self.assertTrue(self.blocked(url) or self.splash_script.search(url), url)
         self.assertTrue(any(fnmatchcase(urlsplit(url).hostname, host) for host in self.mitm_hosts), url)
 
     def test_known_splash_endpoints(self):
@@ -54,7 +62,7 @@ class SplashRules(unittest.TestCase):
         ]
         for url in urls:
             with self.subTest(url=url):
-                self.assert_blocked(url)
+                self.assert_filtered(url)
 
     def test_aggressive_mtop_coverage(self):
         targets = {
@@ -73,7 +81,41 @@ class SplashRules(unittest.TestCase):
                         for suffix in ("/1.0/?client=ios", "?v=1", ""):
                             url = f"https://{gateway}.m.{app}.com/{path}/{endpoint}{suffix}"
                             with self.subTest(url=url):
-                                self.assert_blocked(url)
+                                self.assert_filtered(url)
+
+    def test_xianyu_script_is_not_shadowed_by_reject(self):
+        for host in ("acs", "g-acs", "guide-acs", "gw", "h5api"):
+            for domain in ("goofish", "taobao"):
+                for path in ("gw", "h5"):
+                    for api in ("idlecommerce.splash.ads",
+                                "idlecommerce.splash.async.ads", "idle.splash.ads"):
+                        url = f"https://{host}.m.{domain}.com/{path}/mtop.taobao.{api}/2.0/?v=2"
+                        with self.subTest(url=url):
+                            self.assertTrue(self.splash_script.search(url))
+                            self.assertFalse(self.blocked(url), url)
+                            self.assert_filtered(url)
+
+    def test_xianyu_restore_and_report(self):
+        for host in ("acs", "g-acs", "guide-acs", "gw", "h5api"):
+            for domain in ("goofish", "taobao"):
+                for api in ("idleadv.scene.restore", "idleadv.app.launch.report", "ad.expose"):
+                    url = f"https://{host}.m.{domain}.com/gw/mtop.idle.{api}/1.0/"
+                    with self.subTest(url=url):
+                        self.assert_blocked(url)
+
+    def test_xianyu_shared_gateways_keep_business_paths(self):
+        for host in ("acs", "g-acs", "guide-acs", "gw", "h5api"):
+            for domain in ("goofish", "taobao"):
+                for api in ("taobao.idle.trade.order", "taobao.idle.address.list",
+                            "taobao.idlemtopsearch.search", "taobao.idle.item.detail",
+                            "taobao.idle.message.list", "user.login", "trade.pay",
+                            "idle.idleadv.scene.restoreOther"):
+                    url = f"https://{host}.m.{domain}.com/gw/mtop.{api}/1.0/"
+                    with self.subTest(url=url):
+                        self.assertFalse(self.blocked(url))
+                        self.assertFalse(self.splash_script.search(url))
+        self.assertFalse(self.splash_script.search(
+            "https://acs.m.goofish.com.evil.invalid/gw/mtop.taobao.idlecommerce.splash.ads/2.0/"))
 
     def test_jd_function_order_and_both_paths(self):
         for path in ("api", "client.action"):

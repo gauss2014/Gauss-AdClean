@@ -1,7 +1,7 @@
 #!name=Gauss AdClean Advanced
 #!desc=去广告优先：扩大淘宝、闲鱼和美团开屏、弹窗、营销及素材拦截；可能影响推荐、视频和活动功能
 #!author=Gauss2014 local audit
-#!version=0.4.0
+#!version=0.4.1
 #!homepage=https://github.com/Gauss2014/Gauss-AdClean
 #!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/components/Gauss-AdClean-Advanced.sgmodule
 
@@ -30,7 +30,7 @@ DOMAIN, kad.gotokeep.com, REJECT
 ^https?:\/\/weibointl\.api\.weibo\.cn\/portal\.php\?a=get_searching_info - reject-dict
 # 淘宝
 # Aggressive: shared MTOP gateways and named advertising/marketing API segments.
-^https?:\/\/(?:(?:(?:g|guide)-)?acs|h5api)\.m\.taobao\.com\/(?:gw|h5)\/mtop\.(?:[a-z0-9_]+\.)*(?:splash[a-z0-9_]*|ads?|advert[a-z0-9_]*|popup|popwindow|marketing)(?:\.[a-z0-9_]+)*(?:\/|\?|$) - reject-dict
+^https?:\/\/(?:(?:(?:g|guide)-)?acs|h5api)\.m\.taobao\.com\/(?:gw|h5)\/mtop\.(?!taobao\.(?:idlecommerce\.splash\.(?:async\.)?ads|idle\.splash\.ads)(?:\/|\?|$))(?:[a-z0-9_]+\.)*(?:splash[a-z0-9_]*|ads?|advert[a-z0-9_]*|popup|popwindow|marketing)(?:\.[a-z0-9_]+)*(?:\/|\?|$) - reject-dict
 ^https?:\/\/(?:(?:(?:g|guide)-)?acs|h5api)\.m\.taobao\.com\/(?:gw|h5)\/mtop\.(?:fc\.resource\.tacdata\.get|taobao\.volvo\.secondfloor\.getconfig|taobao\.wireless\.home\.newface\.awesome\.get)(?:\/|\?|$) - reject-dict
 # Creative assets and promotional video; video previews may also disappear.
 ^https?:\/\/ossgw\.alicdn\.com\/creatives-assets\/ - reject-200
@@ -71,8 +71,10 @@ DOMAIN, kad.gotokeep.com, REJECT
 ^https?:\/\/guide-acs\.m\.taobao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads - reject-dict
 ^https?:\/\/netflow-mtop\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads - reject-dict
 # 闲鱼
-# Includes idlecommerce.splash, not only the older splash.ads form.
-^https?:\/\/(?:(?:g|guide)-)?acs\.m\.goofish\.com\/(?:gw|h5)\/mtop\.(?:[a-z0-9_]+\.)*(?:splash[a-z0-9_]*|ads?|advert[a-z0-9_]*|popup|popwindow|marketing)(?:\.[a-z0-9_]+)*(?:\/|\?|$) - reject-dict
+# Exact splash responses use the script below; do not reject them first.
+^https?:\/\/(?:(?:g|guide)-)?acs\.m\.goofish\.com\/(?:gw|h5)\/mtop\.(?!taobao\.(?:idlecommerce\.splash\.(?:async\.)?ads|idle\.splash\.ads)(?:\/|\?|$))(?:[a-z0-9_]+\.)*(?:splash[a-z0-9_]*|ads?|advert[a-z0-9_]*|popup|popwindow|marketing)(?:\.[a-z0-9_]+)*(?:\/|\?|$) - reject-dict
+# Advertising-only restore/report APIs; never reject the shared gateway.
+^https?:\/\/(?:(?:(?:g|guide)-)?acs|gw|h5api)\.m\.(?:goofish|taobao)\.com\/(?:gw|h5)\/mtop\.idle\.(?:idleadv\.(?:app\.launch\.report|scene\.restore)|ad\.expose)(?:\/|\?|$) - reject-dict
 # Recommendation feeds and search suggestions are intentionally sacrificed.
 ^https?:\/\/(?:(?:g|guide)-)?acs\.m\.goofish\.com\/(?:gw|h5)\/mtop\.taobao\.idle\.(?:item\.buy\.feeds|item\.recommend\.list|local\.near\.by\.corner\.info|playboy\.recommend|user\.strategy\.list|home\.welcome)(?:\/|\?|$) - reject-dict
 ^https?:\/\/(?:(?:g|guide)-)?acs\.m\.goofish\.com\/(?:gw|h5)\/mtop\.taobao\.idlemtopsearch\.search\.shade(?:\/|\?|$) - reject-dict
@@ -165,5 +167,9 @@ http-response-jq ^https?:\/\/api\.gotokeep\.com\/op-engine-webapp\/v1\/configs$ 
 # Reddit
 http-response-jq ^https?:\/\/gql(-fed)?\.reddit\.com 'walk(if type == "object" then (if (.commentsPageAds | type == "array") then .commentsPageAds = [] else . end) | (if ((.node | type == "object") and (.node.cells | type == "array") and (.node.cells | any(.__typename? == "AdMetadataCell" or .isAdPost? == true))) then empty else . end) | (if ((.node | type == "object") and (.node.adPayload | type == "object")) then empty else . end) | (if .__typename == "AdPost" then empty else . end) else . end)'
 
+[Script]
+# Audited first-party script pinned to this release, not upstream executable code.
+gauss-xianyu-splash = type=http-response,pattern=^https?:\/\/(?:(?:(?:g|guide)-)?acs|gw|h5api)\.m\.(?:goofish|taobao)\.com\/(?:gw|h5)\/mtop\.taobao\.(?:idlecommerce\.splash\.(?:async\.)?ads|idle\.splash\.ads)(?:\/|\?|$),requires-body=1,max-size=262144,script-path=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.1/scripts/xianyu-splash-cleanup.js,timeout=5
+
 [MITM]
-hostname = %APPEND% bdsp-x.jd.com,dsp-x.jd.com,img*.360buyimg.com,api.weibo.cn,bootpreload.uve.weibo.com,weibointl.api.weibo.cn,api.pinduoduo.com,acs.m.taobao.com,guide-acs.m.taobao.com,act.vip.iqiyi.com,iface2.iqiyi.com,kjp.cupid.iqiyi.com,t7z.cupid.iqiyi.com,cards.iqiyi.com,capi.lkcoffee.com,m.lkcoffee.com,img0*.luckincoffeecdn.com,interface*.music.163.com,ipv4.music.163.com,www.meituan.com,img.meituan.net,p*.meituan.net,sqt.meituan.com,cn-acs.m.cainiao.com,netflow-mtop.cainiao.com,acs.m.goofish.com,g-acs.m.goofish.com,shopping.ele.me,waimai-guide.ele.me,m5.amap.com,m5-zb.amap.com,center.amap.com,amap-aos-info-nogw.amap.com,ai.amap.com,api.gotokeep.com,gql-fed.reddit.com,gql.reddit.com,mp.weixin.qq.com,ad.12306.cn,api-sams.walmartmobile.cn,apiproxy.zuche.com,api.zhihu.com,g-acs.m.taobao.com,h5api.m.taobao.com,guide-acs.m.goofish.com,ossgw.alicdn.com,cloud.video.taobao.com,img.alicdn.com,gw.alicdn.com,heic.alicdn.com,wmapi.meituan.com,s3plus.meituan.net,flowplus.meituan.net
+hostname = %APPEND% bdsp-x.jd.com,dsp-x.jd.com,img*.360buyimg.com,api.weibo.cn,bootpreload.uve.weibo.com,weibointl.api.weibo.cn,api.pinduoduo.com,acs.m.taobao.com,guide-acs.m.taobao.com,act.vip.iqiyi.com,iface2.iqiyi.com,kjp.cupid.iqiyi.com,t7z.cupid.iqiyi.com,cards.iqiyi.com,capi.lkcoffee.com,m.lkcoffee.com,img0*.luckincoffeecdn.com,interface*.music.163.com,ipv4.music.163.com,www.meituan.com,img.meituan.net,p*.meituan.net,sqt.meituan.com,cn-acs.m.cainiao.com,netflow-mtop.cainiao.com,acs.m.goofish.com,g-acs.m.goofish.com,shopping.ele.me,waimai-guide.ele.me,m5.amap.com,m5-zb.amap.com,center.amap.com,amap-aos-info-nogw.amap.com,ai.amap.com,api.gotokeep.com,gql-fed.reddit.com,gql.reddit.com,mp.weixin.qq.com,ad.12306.cn,api-sams.walmartmobile.cn,apiproxy.zuche.com,api.zhihu.com,g-acs.m.taobao.com,h5api.m.taobao.com,guide-acs.m.goofish.com,ossgw.alicdn.com,cloud.video.taobao.com,img.alicdn.com,gw.alicdn.com,heic.alicdn.com,wmapi.meituan.com,s3plus.meituan.net,flowplus.meituan.net,gw.m.goofish.com,gw.m.taobao.com,h5api.m.goofish.com

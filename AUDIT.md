@@ -1,5 +1,19 @@
 # Shadowrocket旧模块审计摘要
 
+## 2026-11-02 闲鱼开屏修补
+
+- 接口及字段线索来自维护者
+  [skernelx/SurgeScripts d98eba9](https://github.com/skernelx/SurgeScripts/commit/d98eba9d655b62440857c351c78b502c5a3068a8)：
+  `idlecommerce.splash.ads/2.0` 的 `cacheAd/cacheAdInfo/dspList`，
+  以及 `idleadv.scene.restore`、`idleadv.app.launch.report`。
+  这是外部维护者的记录，并非本用户手机抓包结论。
+- 本仓库独立实现有边界的响应清理，只操作指定开屏 API 的 data；
+  不导入上游脚本、不伪造成功状态、不记录响应内容、不改会员权限。
+- 对原广泛 URL 拒绝规则加入精确排除，防止它先拒绝请求而导致响应脚本永不执行。
+  新增 MITM 目标只为 `gw.m.goofish.com`、`gw.m.taobao.com`、`h5api.m.goofish.com`。
+- 回归覆盖缓存引用、旧版嵌套容器、未知/畸形输入、幂等、路径边界和业务接口。
+  保留旧版本回退；本机无法替代 iPhone 的冷启动效果及交易功能验收。
+
 审计对象：`Modules.zip`，SHA-256 `f12068f170932dce1ca3212dea050a8e7b92ec837526b371f375a9314b9afa39`。
 
 ## 总体结果
