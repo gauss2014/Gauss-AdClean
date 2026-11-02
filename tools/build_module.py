@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "modules" / "Gauss-AdClean.sgmodule"
-VERSION = "0.4.1"
+VERSION = "0.4.2"
 COMPONENTS = (
     ROOT / "components" / "Gauss-AdClean-Core.sgmodule",
     ROOT / "components" / "Gauss-AdClean-Advanced.sgmodule",

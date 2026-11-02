@@ -1,7 +1,7 @@
 #!name=Gauss JD AdClean
 #!desc=京东去广告优先：拦截开屏、活动弹窗、广告素材、游戏和钱包营销；可能影响商品活动与视频功能
 #!author=Gauss2014 local audit
-#!version=0.5.0
+#!version=0.5.1
 #!homepage=https://github.com/Gauss2014/Gauss-AdClean
 #!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/components/Gauss-JD-Conservative.sgmodule
 
@@ -22,8 +22,8 @@
 
 [Script]
 # 使用已在当前手机环境验证可执行的响应脚本；仅记录接口与修改计数，不记录响应值
-JD_Cleanup_Game = type=http-response,pattern=^https?:\/\/api\.m\.jd\.com\/(client\.action|api)$,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.3.4/scripts/jd-response-cleanup.js
-JD_Cleanup_Home = type=http-response,pattern=^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=(welcomeHome|personinfoBusiness|getTabHomeInfo)(?:&|$),requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.3.4/scripts/jd-response-cleanup.js
+# 新协议的 functionId 可能不在 URL；脚本内严格区分开屏特征与既有 UI 清理范围。
+JD_Cleanup_Main = type=http-response,pattern=^https?:\/\/api\.m\.jd\.com\/(?:client\.action|api)(?:\?[^#]*)?$,requires-body=1,max-size=1048576,script-path=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.2/scripts/jd-response-cleanup.js,timeout=5
 JD_Cleanup_Wallet = type=http-response,pattern=^https?:\/\/ms\.jr\.jd\.com\/gw2\/generic\/(MyWalletS\/newh5\/m\/(myWalletIndex|myWalletIndexAsyncData)|wealth-marketing-component\/h5\/m\/walletEntryQuery|jkActivity\/newh5\/m\/queryDeliveryChannelInfo)(?:\?|$),requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.3.4/scripts/jd-response-cleanup.js
 
 [MITM]

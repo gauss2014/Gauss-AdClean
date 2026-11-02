@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.2 - 2026-11-02
+
+- Add bounded JD start/startup response cleanup for plain and Base64 JSON,
+  retaining logo, protocol envelope, device configuration and unrelated fields.
+- Match query-bearing API requests as well as the existing bare endpoint;
+  hidden function IDs require the images + showTimesDaily signature.
+- Replace overlapping JD main-API script entries with one dispatcher. Keep
+  legacy UI cleanup's previous scope and the wallet script pinned to v0.3.4.
+- No new MITM domains, rejects, routing, DNS, certificate or other-app changes.
+- Add startup, UTF-8/Base64, malformed-input, business-field and dispatch tests.
+  Real-device Double Eleven splash acceptance remains pending.
+
 ## 0.4.1 - 2026-11-02
 
 - Handle exact Xianyu splash APIs with a version-pinned first-party response

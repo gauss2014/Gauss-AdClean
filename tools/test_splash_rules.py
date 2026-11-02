@@ -125,6 +125,25 @@ class SplashRules(unittest.TestCase):
                     with self.subTest(path=path, query=query):
                         self.assert_blocked(f"https://api.m.jd.com/{path}?{query}")
 
+    def test_jd_startup_dispatch_has_one_handler_and_no_early_reject(self):
+        script_lines = [line for line in render().splitlines()
+                        if " = type=http-response,pattern=" in line]
+        patterns = [re.compile(line.split("pattern=", 1)[1].split(",requires-body=", 1)[0])
+                    for line in script_lines]
+        for path in ("client.action", "api"):
+            for suffix in ("", "?", "?functionId=start", "?functionId=startup",
+                           "?client=apple&functionId=start&v=1", "?client=apple"):
+                url = f"https://api.m.jd.com/{path}{suffix}"
+                with self.subTest(url=url):
+                    self.assertEqual(sum(bool(p.search(url)) for p in patterns), 1)
+                    self.assertFalse(self.blocked(url))
+                    self.assertTrue(any(fnmatchcase(urlsplit(url).hostname, host)
+                                        for host in self.mitm_hosts))
+        main = next(line for line in script_lines if line.startswith("JD_Cleanup_Main = "))
+        self.assertIn("/v0.4.2/scripts/jd-response-cleanup.js", main)
+        wallet = next(line for line in script_lines if line.startswith("JD_Cleanup_Wallet = "))
+        self.assertIn("/v0.3.4/scripts/jd-response-cleanup.js", wallet)
+
     def test_aggressive_assets(self):
         urls = [
             "https://ossgw.alicdn.com/creatives-assets/prod/splash.avif",
