@@ -14,7 +14,7 @@
 ## 宿主机同款分流
 
 独立配置入口：[Host-HK-AI-US.conf](configs/Host-HK-AI-US.conf)。节点通过私人文件导入，仓库不存节点凭据。
-普通境外流量走香港，AI及Amazon走美国DMIT，国内、内网和Apple直连；IPv6兜底沿用宿主机的美国出口。
+普通境外流量（IPv4及IPv6）走香港，AI及Amazon走美国DMIT，国内、内网和Apple直连。
 `rules/host-cn.list`和`rules/host-ads.list`来自2026-11-10宿主机正在使用的规则快照。
 选用该配置后，将上述去广告模块启用并沿用原有受信证书。原配置和节点保留，可随时切回。
 
