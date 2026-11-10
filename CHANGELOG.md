@@ -88,3 +88,9 @@
 
 - Core、Advanced 与 System Extras 完成首轮本地审计和实机验证。
 - 排除远程脚本、敏感认证域名及会员状态修改。
+# 0.4.3 (2026-11-10)
+
+- Add exact Xianyu/MTOP gateway UDP443 rules so splash responses can use TCP MITM.
+- Keep splash response scripts, JD handling, CA and other-app QUIC unchanged.
+- Add routing-only host-policy configuration separately; never publish node credentials.
+

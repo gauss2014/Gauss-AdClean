@@ -1,11 +1,23 @@
 #!name=Gauss AdClean Advanced
 #!desc=去广告优先：扩大淘宝、闲鱼和美团开屏、弹窗、营销及素材拦截；可能影响推荐、视频和活动功能
 #!author=Gauss2014 local audit
-#!version=0.4.1
+#!version=0.4.3
 #!homepage=https://github.com/Gauss2014/Gauss-AdClean
 #!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/components/Gauss-AdClean-Advanced.sgmodule
 
 [Rule]
+# Xianyu gateway HTTP/3 cannot use HTTPS response rewriting. Keep TCP available.
+# Endpoint evidence: Thelongdarkorg/loon-plugins xianyu_splash_ad_block.plugin.
+AND,((DOMAIN,acs.m.goofish.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+AND,((DOMAIN,g-acs.m.goofish.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+AND,((DOMAIN,guide-acs.m.goofish.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+AND,((DOMAIN,gw.m.goofish.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+AND,((DOMAIN,h5api.m.goofish.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+AND,((DOMAIN,acs.m.taobao.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+AND,((DOMAIN,g-acs.m.taobao.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+AND,((DOMAIN,guide-acs.m.taobao.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+AND,((DOMAIN,gw.m.taobao.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+AND,((DOMAIN,h5api.m.taobao.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
 # 拼多多
 AND, ((URL-REGEX,"^http:\/\/((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/d(\d)?"),(USER-AGENT,"*com.xunmeng.pinduoduo*")), REJECT
 AND, ((URL-REGEX,"^http:\/\/\[((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))\]\/d(\d)?\?"),(USER-AGENT,"*com.xunmeng.pinduoduo*")), REJECT
