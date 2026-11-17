@@ -1,0 +1,7 @@
+# Gauss YouTube QX 0.1.0
+# Add as a rewrite resource, not a full configuration. No resource parser needed.
+# Uses QX MitM QUIC handling; no global UDP block or routing changes.
+# Only actual rr/r CDN endpoints, leaving redirectors outside MitM.
+hostname = youtubei.googleapis.com, youtubei-att.googleapis.com, rr*.googlevideo.com, r?.googlevideo.com, r??.googlevideo.com
+^https:\/\/(?:youtubei|youtubei-att)\.googleapis\.com\/youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|get_watch)(?:\?.*)?$ url script-response-body https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/qx-v0.1.0/scripts/youtube-response-cleanup-qx.js
+^https?://(?!redirector)[\w-]+\.googlevideo\.com/initplayback\?(?:[^#]*&)?oad(?:[=&]|$) url reject-200
