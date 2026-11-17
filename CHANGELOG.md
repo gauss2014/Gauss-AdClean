@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.4 - 2026-11-17
+
+- Embed local-only YouTube protobuf ad filtering in the existing single subscription.
+  No Worker, request rewrite, remote script or premium entitlement modification.
+- Remove Apple Geo US rewrite and its MITM host from the integrated module for
+  Watch weather diagnosis; preserve the historical standalone component.
+- Preserve all other app rules, pinned scripts, proxy/DNS settings and certificates.
+- Add nine offline YouTube tests against the final integrated inline script.
+  Device validation remains pending; newer ad_break/UMP midroll ads may remain.
+- Include pinned upstream attribution and Apache-2.0 license.
+
 ## 0.4.2 - 2026-11-02
 
 - Add bounded JD start/startup response cleanup for plain and Base64 JSON,

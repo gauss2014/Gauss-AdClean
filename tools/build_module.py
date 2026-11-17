@@ -7,12 +7,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "modules" / "Gauss-AdClean.sgmodule"
-VERSION = "0.4.3"
+VERSION = "0.4.4"
 COMPONENTS = (
     ROOT / "components" / "Gauss-AdClean-Core.sgmodule",
     ROOT / "components" / "Gauss-AdClean-Advanced.sgmodule",
     ROOT / "components" / "Gauss-JD-Conservative.sgmodule",
-    ROOT / "components" / "Gauss-System-Extras.sgmodule",
+    ROOT / "components" / "Gauss-YouTube-Local.sgmodule",
 )
 SECTION_ORDER = ("Rule", "URL Rewrite", "Body Rewrite", "Script")
 
@@ -47,7 +47,7 @@ def render() -> str:
     parsed = [(path, parse_component(path)) for path in COMPONENTS]
     output = [
         "#!name=Gauss AdClean",
-        "#!desc=去广告优先：强化闲鱼、淘宝、京东、美团开屏与营销拦截，允许部分功能失效；不改分流与证书",
+        "#!desc=整合去广告与本地YouTube广告过滤；移除Apple地区改写，Watch天气待实测；保留原节点与证书",
         "#!author=Gauss2014 local audit",
         f"#!version={VERSION}",
         "#!homepage=https://github.com/Gauss2014/Gauss-AdClean",

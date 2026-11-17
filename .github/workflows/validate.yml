@@ -19,3 +19,4 @@ jobs:
           python3 tools/test_host_policy.py
           node --test tools/test_xianyu_splash.js
           node --test tools/test_jd_splash.js
+          node --test tools/test_youtube_local.js

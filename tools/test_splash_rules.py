@@ -201,12 +201,13 @@ class SplashRules(unittest.TestCase):
         self.assertEqual(sections, ["Rule", "URL Rewrite", "Body Rewrite", "Script", "MITM"])
         self.assertNotIn("hostname = %APPEND% *\n", render())
 
-    def test_xianyu_quic_scope(self):
+    def test_exact_quic_scope(self):
         lines = [line for line in render().splitlines()
                  if line.startswith("AND,((DOMAIN,") and "(PROTOCOL,UDP)" in line]
         hosts = {f"{gateway}.m.{domain}.com"
                  for gateway in ("acs", "g-acs", "guide-acs", "gw", "h5api")
                  for domain in ("goofish", "taobao")}
+        hosts.update({"youtubei.googleapis.com", "youtubei-att.googleapis.com"})
         expected = {f"AND,((DOMAIN,{host}),(PROTOCOL,UDP),(DST-PORT,443)),REJECT"
                     for host in hosts}
         self.assertEqual(set(lines), expected)

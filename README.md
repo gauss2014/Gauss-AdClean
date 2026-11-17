@@ -2,6 +2,21 @@
 
 自维护的 Shadowrocket 去广告模块。规则来自历史实测和公开规则维护者的接口线索；新增规则的离线测试不代表手机端已验证。仅引用本仓库固定版本的响应脚本，不包含 CA、私钥、Cookie、抓包或会员状态伪造。
 
+## 0.4.4 YouTube本地去广告与Watch排障
+
+刷新原订阅到 `0.4.4`，重新连接Shadowrocket。只启用总模块即可；如已导入
+YouTube Local或Watch NoGeo测试模块，请停用它们，避免重复处理。
+
+- YouTube广告处理脚本直接内联在总模块，在手机本地执行，无第三方Worker或远程JS依赖。
+  仅两个YouTube API域名开启MITM和UDP/443回退，视频CDN、会员能力、字幕及普通Shorts保持不变。
+  处理已有定义的广告字段；新版 `player/ad_break` 和UMP流不处理，可能仍有中插广告。
+- 总模块移除Apple Geo强制US改写及对应MITM，以排查Watch天气更新异常。
+  旧System Extras组件仅作历史保留，不再合入；这不是已经确认实机恢复的声明。
+- 其他应用规则、现有固定版本脚本、节点、DNS和CA保持原样。YouTube二进制离线测试通过，
+  手机导入、视频播放及Watch同城天气更新仍需实测。
+- 上游固定提交和许可证见 `licenses/youtube-local/`。回退使用
+  `https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.3/modules/Gauss-AdClean.sgmodule`。
+
 ## 0.4.3 闲鱼开屏传输补漏
 
 补齐闲鱼及其淘宝兼容网关的UDP/443拒绝，让HTTP/3请求回落到可执行MITM改写的TCP。

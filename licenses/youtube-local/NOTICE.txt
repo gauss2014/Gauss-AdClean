@@ -1,0 +1,22 @@
+Gauss YouTube Local AdOnly 0.1.0-candidate
+
+Derived from Maasea/sgmodule, licensed under Apache License 2.0.
+Upstream: https://github.com/Maasea/sgmodule
+Pinned revision: 65075cdb388fc5e3094afd7e7314c67b243f3525
+Source: Script/Youtube/youtube.response.js
+The upstream bundle includes protobuf-ts runtime/schema code; its attribution is retained here.
+protobuf-ts: https://github.com/timostamm/protobuf-ts
+See LICENSE for the upstream Apache License 2.0 text.
+
+Modified 2026-11-17:
+- Reused the upstream bundled protobuf runtime and message schemas.
+- Replaced the runtime adapter and handlers with local response-only, ad-only processing.
+- Removed request processing, Worker redirection, network helpers, persistent key/config storage,
+  entitlement alterations, caption translation and navigation customization.
+- Removed unknown-field/pagead heuristics and automatic Shorts removal.
+- Embedded all execution code inside the Shadowrocket candidate module.
+- Added binary-fixture tests for preservation, error pass-through and no network calls.
+
+The Watch NoGeo test module is a separate derivative of the user's Gauss AdClean 0.4.3 delivery.
+It only removes Apple Geo rewriting and its MITM hostname, plus module update metadata.
+It retains the original fixed-version remote ad-script references. No weather fix is claimed yet.
