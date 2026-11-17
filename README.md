@@ -1,5 +1,10 @@
 # Gauss AdClean
 
+## Quantumult X
+
+QX 独立资源已提供：[YouTube](configs/QuantumultX-YouTube.md)、[其他应用与广告域名拦截](configs/QuantumultX-Apps.md)。
+添加引用即可，不覆盖现有分流或证书；原 Shadowrocket 模块保留。
+
 自维护的 Shadowrocket 去广告模块。规则来自历史实测和公开规则维护者的接口线索；新增规则的离线测试不代表手机端已验证。仅引用本仓库固定版本的响应脚本，不包含 CA、私钥、Cookie、抓包或会员状态伪造。
 
 ## 0.4.9 状态兼容修正与本地执行提示

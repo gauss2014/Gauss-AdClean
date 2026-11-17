@@ -1,0 +1,34 @@
+{
+  "version": "apps-qx-v0.1.0",
+  "components": [
+    "Gauss-AdClean-Core.sgmodule",
+    "Gauss-AdClean-Advanced.sgmodule",
+    "Gauss-JD-Conservative.sgmodule"
+  ],
+  "filter_rules": 908,
+  "rewrite_rules": 122,
+  "mitm_hosts": 82,
+  "url_rejects": 103,
+  "pdd_url_and_header_rules": 2,
+  "jq_source_operations": 58,
+  "jq_combined_rules": 13,
+  "regex_body_rules": 2,
+  "scripts": [
+    "https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.1/scripts/xianyu-splash-cleanup.js",
+    "https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.2/scripts/jd-response-cleanup.js",
+    "https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.3.4/scripts/jd-response-cleanup.js"
+  ],
+  "quic_hosts_handled_by_qx_mitm": [
+    "acs.m.goofish.com",
+    "g-acs.m.goofish.com",
+    "guide-acs.m.goofish.com",
+    "gw.m.goofish.com",
+    "h5api.m.goofish.com",
+    "acs.m.taobao.com",
+    "g-acs.m.taobao.com",
+    "guide-acs.m.taobao.com",
+    "gw.m.taobao.com",
+    "h5api.m.taobao.com"
+  ],
+  "youtube_resource_unchanged": true
+}
