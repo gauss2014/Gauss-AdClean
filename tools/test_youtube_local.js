@@ -6,7 +6,7 @@ const out = require('node:path').resolve(__dirname, '..');
 const moduleText = fs.readFileSync(out + '/modules/Gauss-AdClean.sgmodule', 'utf8');
 const rule = moduleText.split('\n').find(line => line.startsWith('Gauss_YT_Local ='));
 const scriptURL = rule.match(/script-path=([^,\s]+)/)?.[1];
-assert.equal(scriptURL, 'https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.7/scripts/youtube-response-cleanup.js');
+assert.equal(scriptURL, 'https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.9/scripts/youtube-response-cleanup.js');
 const inline = fs.readFileSync(out + '/scripts/youtube-response-cleanup.js', 'utf8');
 const fixtureCode = fs.readFileSync(__dirname + '/fixtures/youtube-local-schema.js', 'utf8');
 
@@ -19,7 +19,7 @@ function context(url, body, status = 200) {
         $response: {status, body, headers: {'Content-Length': '999', 'Content-Type': 'application/x-protobuf'}},
         console: {log: line => logs.push(line)}, $done: value => calls.push(value)
     };
-    for (const name of ['$httpClient', '$task', '$persistentStore', '$prefs', 'fetch']) {
+    for (const name of ['$httpClient', '$task', '$prefs', 'fetch']) {
         Object.defineProperty(c, name, {get() {throw new Error('Forbidden global accessed: ' + name);}});
     }
     return {c: vm.createContext(c), calls, logs};
@@ -109,6 +109,51 @@ test('player strips ad fields, preserves unknown bytes and original playback fla
     assert(!('Content-Length' in result.value.headers));
     assert(result.logs.every(line => !line.includes('PRIVATE')));
 });
+test('HTTP status line and numeric status both filter; explicit error status passes through', () => {
+    const body = routes.player.toBinary(player());
+    for (const status of [200, '200', 'HTTP/1.1 200 OK', 'HTTP/2 200']) {
+        assert(execute('player', body, status).value.body);
+    }
+    for (const status of ['HTTP/1.1 403 Forbidden', 'invalid']) {
+        assert.equal(Object.keys(execute('player', body, status).value).length, 0);
+    }
+    const r = context('https://youtubei.googleapis.com/youtubei/v1/player', body, 'invalid');
+    r.c.$response.statusCode = 200;
+    vm.runInContext(inline, r.c);
+    assert(r.calls[0].body);
+});
+test('local execution notice is deduplicated without URLs or payload data', () => {
+    const storage = new Map(), notices = [];
+    function run(body) {
+        const r = context('https://youtubei.googleapis.com/youtubei/v1/player?key=SECRET', body);
+        r.c.$persistentStore = {
+            read: key => storage.get(key),
+            write: (value, key) => {storage.set(key, value); return true;}
+        };
+        r.c.$notification = {post: (...args) => notices.push(args)};
+        vm.runInContext(inline, r.c);
+        return r;
+    }
+    run(routes.player.toBinary(player()));
+    run(routes.player.toBinary(player()));
+    assert.equal(notices.length, 1);
+    assert(notices[0].join(' ').includes('FILTERED'));
+    run(Uint8Array.of(255));
+    run(Uint8Array.of(255));
+    assert.equal(notices.length, 2);
+    assert(notices[1].join(' ').includes('PROTOBUF_ERROR'));
+    run('unsupported');
+    assert(notices[2].join(' ').includes('BODY_SKIP'));
+    assert(!JSON.stringify([...notices, ...storage.entries()]).includes('SECRET'));
+    assert(notices.every(n => n.length === 3));
+});
+test('notification failure does not prevent response filtering', () => {
+    const r = context('https://youtubei.googleapis.com/youtubei/v1/player', routes.player.toBinary(player()));
+    r.c.$persistentStore = {read: () => null, write: () => true};
+    r.c.$notification = {post: () => {throw new Error('Notifications disabled');}};
+    vm.runInContext(inline, r.c);
+    assert(r.calls[0].body);
+});
 test('no ads leaves original response untouched', () => {
     const body = routes.player.toBinary(routes.player.create({playabilityStatus: {}}));
     assert.equal(Object.keys(execute('player', body).value).length, 0);
@@ -163,7 +208,7 @@ test('only own pinned script; no Worker or credentials', () => {
     assert.deepEqual(component.match(/script-path=[^,\s]+/g), ['script-path=' + scriptURL]);
     assert(!moduleText.includes('Compass_Coordinates'));
     assert(!moduleText.includes('gspe*-ssl.ls.apple.com'));
-    assert(!/\$httpClient|\$task|\$prefs|\$persistentStore|fetch\(/.test(inline));
+    assert(!/\$httpClient|\$task|\$prefs|fetch\(/.test(inline));
     assert.equal(moduleText.split('\n').filter(line => line.startsWith('Gauss_YT_Local =')).length, 1);
 });
 
@@ -195,7 +240,7 @@ test('homepage opaque sponsored first card removed through final binary script',
     const cards = homeItems(routes.browse.fromBinary(result.value.body));
     assert.equal(cards.length, 1);
     assert.deepEqual(unknown.list(cards[0]), unknown.list(normal));
-    assert(result.logs.includes('[GAUSS-YT-LOCAL] browse removed=1'));
+    assert(result.logs.some(s => s.startsWith('[GAUSS-YT-LOCAL] browse FILTERED removed=1 bytes=')));
 });
 test('homepage preserves ordinary first card and checks each opaque card independently', () => {
     const normal = opaqueCard('ordinary first video');
@@ -205,7 +250,7 @@ test('homepage preserves ordinary first card and checks each opaque card indepen
     assert.deepEqual(unknown.list(cards[0]), unknown.list(normal));
     const untouched = execute('browse', routes.browse.toBinary(home([normal])));
     assert.equal(Object.keys(untouched.value).length, 0);
-    assert(untouched.logs.includes('[GAUSS-YT-LOCAL] browse removed=0'));
+    assert(untouched.logs.some(s => s.startsWith('[GAUSS-YT-LOCAL] browse NO_MATCH removed=0 bytes=')));
 });
 test('small unknown fields do not trigger opaque ad detection', () => {
     const small = {};
@@ -234,7 +279,7 @@ for (const route of ['next', 'search']) {
         const cards = feedItems(route, type.fromBinary(result.value.body));
         assert.equal(cards.length, 2);
         assert.deepEqual(unknown.list(cards[0]), unknown.list(normal));
-        assert(result.logs.includes('[GAUSS-YT-LOCAL] ' + route + ' removed=1'));
+        assert(result.logs.some(s => s.startsWith('[GAUSS-YT-LOCAL] ' + route + ' FILTERED removed=1 bytes=')));
         const noAds = type.toBinary(feed(route, [normal]));
         assert.equal(Object.keys(execute(route, noAds).value).length, 0);
     });

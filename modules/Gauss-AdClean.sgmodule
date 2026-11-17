@@ -1,7 +1,7 @@
 #!name=Gauss AdClean
 #!desc=整合去广告与本地YouTube广告过滤；移除Apple地区改写，Watch天气待实测；保留原节点与证书
 #!author=Gauss2014 local audit
-#!version=0.4.8
+#!version=0.4.9
 #!homepage=https://github.com/Gauss2014/Gauss-AdClean
 #!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/modules/Gauss-AdClean.sgmodule
 
@@ -288,7 +288,7 @@ JD_Cleanup_Main = type=http-response,pattern=^https?:\/\/api\.m\.jd\.com\/(?:cli
 JD_Cleanup_Wallet = type=http-response,pattern=^https?:\/\/ms\.jr\.jd\.com\/gw2\/generic\/(MyWalletS\/newh5\/m\/(myWalletIndex|myWalletIndexAsyncData)|wealth-marketing-component\/h5\/m\/walletEntryQuery|jkActivity\/newh5\/m\/queryDeliveryChannelInfo)(?:\?|$),requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.3.4/scripts/jd-response-cleanup.js
 
 # Component: Gauss-YouTube-Local
-Gauss_YT_Local = type=http-response,pattern=^https:\/\/(?:youtubei|youtubei-att)\.googleapis\.com\/youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|get_watch)(?:\?.*)?$,requires-body=1,binary-body-mode=1,max-size=2097152,script-path=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.7/scripts/youtube-response-cleanup.js
+Gauss_YT_Local = type=http-response,pattern=^https:\/\/(?:youtubei|youtubei-att)\.googleapis\.com\/youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|get_watch)(?:\?.*)?$,requires-body=1,binary-body-mode=1,max-size=2097152,script-path=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.9/scripts/youtube-response-cleanup.js
 
 [MITM]
 enable = true

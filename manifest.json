@@ -1,10 +1,10 @@
 {
-  "release": "0.4.8",
+  "release": "0.4.9",
   "repository": "https://github.com/Gauss2014/Gauss-AdClean",
   "modules": [
     {
       "name": "Gauss AdClean",
-      "version": "0.4.8",
+      "version": "0.4.9",
       "path": "modules/Gauss-AdClean.sgmodule"
     }
   ],

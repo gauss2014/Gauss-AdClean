@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.9 - 2026-11-17
+
+- Fix a reproduced bypass for successful HTTP status-line strings; prioritize
+  statusCode when provided. Device DB lacks response status, so this is not a
+  confirmed explanation for the user's remaining ads.
+- Add deduplicated, local-only execution notices for filtering, no matches and
+  input/parse skips. Persist only notice keys, never URLs, credentials or bodies.
+  No outgoing requests or notification actions. Disabled notices do not break filtering.
+- User confirms 0.4.8 still leaks feed/recommendation/video ads after recompiling.
+  Preserve the 2 MiB cap and rule scope; stop relying on repeated connection DBs
+  to infer response-script execution.
+
 ## 0.4.8 - 2026-11-17
 
 - Add Googlevideo TCP fallback and MITM, excluding redirector hosts. Adapt
