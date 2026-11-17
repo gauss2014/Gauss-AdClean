@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.7 - 2026-11-17
+
+- Replace the oversized inline YouTube script with the identical runtime loaded
+  from this repository's pinned v0.4.7 script file. No filtering, size-cap,
+  MITM, proxy, or certificate change; no runtime network requests.
+- Exercise the exact published script in binary regression tests and check the
+  module's pinned loader reference. Synchronize stale manifest release metadata.
+- User reports 0.4.6 still displays clickable ads. DB confirms decoded browse
+  requests, not script execution. Loader compatibility remains a hypothesis
+  until this single-variable change is tested on the phone.
+
 ## 0.4.6 - 2026-11-17
 
 - Extend per-card opaque pagead detection to search, next and nested get_watch

@@ -5,7 +5,9 @@ const {test} = require('node:test');
 const out = require('node:path').resolve(__dirname, '..');
 const moduleText = fs.readFileSync(out + '/modules/Gauss-AdClean.sgmodule', 'utf8');
 const rule = moduleText.split('\n').find(line => line.startsWith('Gauss_YT_Local ='));
-const inline = rule.slice(rule.indexOf('script-text=') + 'script-text='.length);
+const scriptURL = rule.match(/script-path=([^,\s]+)/)?.[1];
+assert.equal(scriptURL, 'https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.7/scripts/youtube-response-cleanup.js');
+const inline = fs.readFileSync(out + '/scripts/youtube-response-cleanup.js', 'utf8');
 const fixtureCode = fs.readFileSync(__dirname + '/fixtures/youtube-local-schema.js', 'utf8');
 
 function context(url, body, status = 200) {
@@ -25,6 +27,14 @@ function context(url, body, status = 200) {
 const fixture = context('', new Uint8Array());
 vm.runInContext(fixtureCode, fixture.c, {timeout: 2000});
 const {routes, unknown, clean} = fixture.c.fixtureTypes;
+
+test('module loads pinned script file, retains body cap and has no inline source', () => {
+    assert(!rule.includes('script-text='));
+    assert(rule.includes('requires-body=1,binary-body-mode=1,max-size=2097152'));
+    for (const api of ['$httpClient', '$task', 'fetch(', 'XMLHttpRequest', 'WebSocket', 'workers.dev']) {
+        assert(!inline.includes(api), api);
+    }
+});
 
 function execute(route, bytes, status = 200, host = 'youtubei.googleapis.com') {
     const result = context('https://' + host + '/youtubei/v1/' + route, bytes, status);
@@ -103,10 +113,10 @@ test('feed only removes known injection layout, preserves Shorts and unknown ite
     assert.equal(clean('browse', message), 1);
     assert.equal(message.nested.richItemContents.length, 2);
 });
-test('no remote code, Worker, credentials, or Googlevideo MITM in module', () => {
+test('only own pinned script; no Worker, credentials, or Googlevideo MITM', () => {
     assert(!/workers\.dev|ca-p12|ca-passphrase|hostname.*googlevideo/.test(moduleText));
     const component = fs.readFileSync(out + '/components/Gauss-YouTube-Local.sgmodule', 'utf8');
-    assert(!component.includes('script-path='));
+    assert.deepEqual(component.match(/script-path=[^,\s]+/g), ['script-path=' + scriptURL]);
     assert(!moduleText.includes('Compass_Coordinates'));
     assert(!moduleText.includes('gspe*-ssl.ls.apple.com'));
     assert(!/\$httpClient|\$task|\$prefs|\$persistentStore|fetch\(/.test(inline));
