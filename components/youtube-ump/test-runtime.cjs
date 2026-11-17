@@ -158,6 +158,41 @@ async function runQX(url, body, statusCode=200) {
     const s=await runQX('https://rr1---sn-test.googlevideo.com/initplayback?ack=1',stream(0,2).raw);
     verifyChanged(new Uint8Array(s.bodyBytes),0);
   });
+  await test('observed 2114916-byte UMP filters metadata and preserves large media',async()=>{
+    const prefix=frames(stream(0,0).raw).slice(0,2).map(f=>frame(f.type,f.body));
+    const prefixBytes=Buffer.concat(prefix);
+    const payload=crypto.randomBytes(2114916-prefixBytes.length-5);
+    const raw=Buffer.concat([prefixBytes,frame(21,payload)]);
+    assert.equal(raw.length,2114916);
+    const r=await runQX('https://rr1.googlevideo.com/initplayback?secret=private',raw);
+    const f=frames(Buffer.from(r.bodyBytes));
+    const h=a.Header.fromBinary(bytes(f[0].body));
+    const e=a.Envelope.fromBinary(bytes(opened({...h.crypto,body:f[1].body})));
+    assert.deepEqual(Buffer.from(e.body[0]),cleanPlayer);
+    assert.deepEqual(f[2].body,payload);
+    assert(logs.some(x=>x.includes('UMP_FILTERED route=initplayback') && x.includes('bytes=2114916')));
+  });
+  await test('API response above old 2MiB limit filters ads and retains unknown payload',async()=>{
+    const padding=crypto.randomBytes(2110000);
+    const field=Buffer.from([0xa2,6]);
+    let n=padding.length;const size=[];
+    do {const b=n&127;n>>>=7;size.push(b|(n?128:0));} while(n);
+    const unknown=Buffer.concat([field,Buffer.from(size),padding]);
+    const r=await runQX('https://youtubei.googleapis.com/youtubei/v1/player',Buffer.concat([player,unknown]));
+    assert.deepEqual(Buffer.from(r.bodyBytes),unknown);
+  });
+  await test('compressed metadata expansion remains bounded to 2MiB',async()=>{
+    const packet=encrypted(Buffer.alloc(2097153),1);
+    assert.throws(()=>a.decrypt(packet.body,packet,[bytes(key)]),/DECOMPRESSED_SIZE_SKIP/);
+  });
+  await test('UMP no-ad diagnostics distinguish metadata parsing from media-only frames',async()=>{
+    const r=await a.transformUMP(bytes(stream(0,0,cleanPlayer).raw),[bytes(key)]);
+    assert.equal(r.stats.decrypted,1);assert.equal(r.stats.pairs,1);assert.equal(r.stats.types[0],1);
+    const raw=frame(21,media);
+    const s=await runQX('https://rr1.googlevideo.com/initplayback',raw);
+    assert.equal(Object.keys(s).length,0);
+    assert(logs.some(x=>x.includes('NO_AD_FIELDS route=initplayback') && x.includes('"pairs":0')));
+  });
   await test('API player path still filtered without UI/PiP mutation',async()=>{
     const r=await runQX('https://youtubei-att.googleapis.com/youtubei/v1/player',player);
     assert.deepEqual(Buffer.from(r.bodyBytes),cleanPlayer);
@@ -177,7 +212,7 @@ async function runQX(url, body, statusCode=200) {
     assert.equal(type.fromBinary(bytes(Buffer.from(s.bodyBytes))).entries.length,1);
   });
   await test('unsupported body/non200/oversize pass through',async()=>{
-    for(const [body,status] of [[Buffer.from([255]),200],[player,500],[Buffer.alloc(2097153),200]]) {
+    for(const [body,status] of [[Buffer.from([255]),200],[player,500],[Buffer.alloc(4194305),200]]) {
       const r=await runQX('https://youtubei.googleapis.com/youtubei/v1/player',body,status);
       assert.equal(Object.keys(r).length,0);
     }

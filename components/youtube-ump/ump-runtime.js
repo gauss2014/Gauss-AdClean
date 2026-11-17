@@ -9,7 +9,8 @@ import { CompositeBuffer, UmpReader, UmpWriter } from 'googlevideo/ump';
 import { schema, clean, cleanPlayer, cleanFeed } from './schema.generated.js';
 export { schema };
 
-export const VERSION = 'qx-ump-v0.2.0-beta1';
+export const VERSION = 'qx-ump-v0.2.0-beta2';
+const MAX_BODY = 4194304;
 const MAX = 2097152;
 const CACHE = 'Gauss-QX-UMP-keys-v1';
 const scalar = (no, name, T, extra = {}) => ({no, name, kind: 'scalar', T, ...extra});
@@ -115,15 +116,19 @@ export async function transformUMP(body, keys) {
   // The bundled reader retains incomplete tails; never publish a truncated stream.
   if (reader.compositeBuffer.getLength() !== 0) throw Error('UMP_TRUNCATED');
   let removed = 0;
+  const stats = {frames: parts.length, pairs: 0, decrypted: 0, envelopeSkipped: 0, types: {}};
   for (let i = 0; i + 1 < parts.length; i++) {
     const first = parts[i], next = parts[i + 1];
     if (first.type !== 10 || next.type !== 11) continue;
     const header = Header.fromBinary(first.bytes);
+    stats.pairs++;
+    stats.types[header.type] = (stats.types[header.type] || 0) + 1;
     if (header.type === 0) {
       if (!header.crypto) throw Error('CRYPTO_FIELDS_MISSING');
       const {key, plain} = decrypt(next.bytes, header.crypto, keys);
+      stats.decrypted++;
       const envelope = Envelope.fromBinary(plain);
-      if (envelope.status !== 1 || envelope.httpStatus !== 200) continue;
+      if (envelope.status !== 1 || envelope.httpStatus !== 200) { stats.envelopeSkipped++; continue; }
       let delta = 0;
       envelope.body = envelope.body.map(bytes => {
         const result = cleanPart(bytes, true); delta += result.removed; return result.bytes;
@@ -137,6 +142,7 @@ export async function transformUMP(body, keys) {
     } else if (header.type === 25) {
       const part = EncryptedPart.fromBinary(next.bytes);
       const {key, plain} = decrypt(part.body, part, keys);
+      stats.decrypted++;
       const result = cleanPart(plain, false);
       if (!result.removed) continue;
       Object.assign(part, encrypt(result.bytes, part, key));
@@ -144,10 +150,12 @@ export async function transformUMP(body, keys) {
       removed += result.removed;
     }
   }
-  if (!removed) return {bytes: body, removed};
+  if (!removed) return {bytes: body, removed, stats};
   const output = new CompositeBuffer(), writer = new UmpWriter(output);
   for (const part of parts) writer.write(part.type, part.bytes);
-  return {bytes: limited(join(output.chunks)), removed};
+  const result = join(output.chunks);
+  if (result.length > MAX_BODY) throw Error('SIZE_SKIP');
+  return {bytes: result, removed, stats};
 }
 
 function report(outcome, detail = '') {
@@ -161,11 +169,13 @@ function report(outcome, detail = '') {
 }
 
 export async function run() {
+  let routeLabel = 'unmatched';
   try {
     const url = $request.url || '';
     const api = /^https:\/\/(?:youtubei|youtubei-att)\.googleapis\.com\/youtubei\/v1\/([^?]+)(?:\?.*)?$/.exec(url);
     const cdn = /^https:\/\/(?!redirector)[\w-]+\.googlevideo\.com\/initplayback(?:\?|$)/.test(url);
     if (!api && !cdn) return $done({});
+    routeLabel = cdn ? 'initplayback' : (Object.prototype.hasOwnProperty.call(schema.routes, api[1]) || /^(log_event|config)$/.test(api[1]) ? api[1] : 'other-api');
     if (typeof $response === 'undefined') {
       if (api && /^(log_event|config)$/.test(api[1]) && !loadKeys().length) {
         const headers = {...$request.headers};
@@ -179,9 +189,9 @@ export async function run() {
     const status = /^(?:HTTP\/[\d.]+\s+)?(\d{3})(?:\s.*)?$/.exec(String($response.statusCode ?? $response.status ?? '').trim());
     if (!status || Number(status[1]) !== 200) return $done({});
     const body = rawBytes($response.bodyBytes);
-    if (body.length > MAX) { report('SIZE_SKIP', 'bytes=' + body.length); return $done({}); }
+    if (body.length > MAX_BODY) { report('SIZE_SKIP', 'route=' + routeLabel + ' bytes=' + body.length); return $done({}); }
     if (api && /^(config|log_event)$/.test(api[1])) {
-      if (captureConfig(body)) report('KEY_READY');
+      if (captureConfig(body)) report('KEY_READY', 'route=' + routeLabel);
       return $done({});
     }
     let result;
@@ -194,14 +204,15 @@ export async function run() {
       result = {removed, bytes: removed ? type.toBinary(msg) : body};
     }
     report(result.removed ? (cdn ? 'UMP_FILTERED' : 'API_FILTERED') : 'NO_AD_FIELDS',
-      'removed=' + result.removed + ' bytes=' + body.length);
+      'route=' + routeLabel + ' removed=' + result.removed + ' bytes=' + body.length +
+      (result.stats ? ' ump=' + JSON.stringify(result.stats) : ''));
     if (!result.removed) return $done({});
     const bytes = result.bytes;
     return $done({bodyBytes: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)});
   } catch (e) {
     // Never log URLs, protobuf bodies, keys or upstream exception text.
-    const known = /^(KEY_MISSING|KEY_MISMATCH|KEY_SAVE_FAILED|UMP_TRUNCATED|CRYPTO_FIELDS_MISSING|COMPRESSION_UNSUPPORTED|DECOMPRESSED_SIZE_SKIP|BODY_UNAVAILABLE)$/;
-    report(known.test(e.message) ? e.message : 'PARSE_BYPASS');
+    const known = /^(KEY_MISSING|KEY_MISMATCH|KEY_SAVE_FAILED|UMP_TRUNCATED|CRYPTO_FIELDS_MISSING|COMPRESSION_UNSUPPORTED|DECOMPRESSED_SIZE_SKIP|BODY_UNAVAILABLE|SIZE_SKIP)$/;
+    report(known.test(e.message) ? e.message : 'PARSE_BYPASS', 'route=' + routeLabel);
     return $done({});
   }
 }

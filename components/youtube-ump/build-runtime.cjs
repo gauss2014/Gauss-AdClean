@@ -27,7 +27,7 @@ const config = {entryPoints: [path.join(root, 'ump-runtime.js')], bundle: true,
   for (const token of ['workers.dev', '$task', '$httpClient', 'XMLHttpRequest', 'WebSocket', 'fetch('])
     assert(!code.includes(token), token);
   fs.writeFileSync(path.join(root, 'runtime.test-bundle.js'), code);
-  const runtime = '// Gauss QX local UMP beta1. Runtime network calls: zero. See accompanying LICENSES.\n' + code + '\nGaussUMP.run();\n';
+  const runtime = '// Gauss QX local UMP beta2. Runtime network calls: zero. See accompanying LICENSES.\n' + code + '\nGaussUMP.run();\n';
   fs.writeFileSync(path.join(root, 'youtube-ump-local-qx.js'), runtime);
   console.log(JSON.stringify({bytes: Buffer.byteLength(runtime), runtime_network_calls: 0}));
 })().catch(e => {console.error(e);process.exitCode=1;});
