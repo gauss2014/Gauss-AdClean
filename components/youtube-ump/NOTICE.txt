@@ -1,0 +1,15 @@
+Gauss YouTube QX UMP local adaptation, beta1.
+
+Maasea/sgmodule, Apache-2.0, commit 65075cdb388fc5e3094afd7e7314c67b243f3525.
+upstream-response.js SHA256:
+f98483d5f5017514f82502253c0db5ce2d4ffb7839887aa2cadc22666f5a7f12
+The builder extracts schema definitions only. The upstream network/client bootstrap
+is not present in the published bundle. Ad-only logic preserves the original
+Gauss filtering scope; UMP transport handling is added separately.
+
+Runtime dependencies, pinned by package-lock.json:
+@noble/ciphers and @noble/hashes (MIT), @protobuf-ts/runtime (Apache-2.0),
+googlevideo (MIT), fflate (MIT), brotli.js (MIT; decoder Google Apache-2.0),
+base64-js (MIT).
+See LICENSES/ for license texts. Original decoder copyright comments are retained
+in the bundled JavaScript. esbuild is build-time only.

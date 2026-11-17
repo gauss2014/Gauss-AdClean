@@ -1,0 +1,8 @@
+# Gauss YouTube UMP QX TEST beta1
+# Disable other YouTube rewrite resources before enabling this one.
+# Local processing only. No Worker or runtime external requests.
+# No resource parser. Keep the existing phone certificate and routing.
+hostname = -redirector*.googlevideo.com,*.googlevideo.com,youtubei.googleapis.com,youtubei-att.googleapis.com
+^https:\/\/(?:youtubei|youtubei-att)\.googleapis\.com\/youtubei\/v1\/(?:log_event|config)(?:\?.*)?$ url script-request-header https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/qx-ump-v0.2.0-beta1/scripts/youtube-ump-local-qx.js
+^https:\/\/(?:youtubei|youtubei-att)\.googleapis\.com\/youtubei\/v1\/(?:browse|next|player|search|reel\/reel_watch_sequence|get_watch|log_event|config)(?:\?.*)?$ url script-response-body https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/qx-ump-v0.2.0-beta1/scripts/youtube-ump-local-qx.js
+^https:\/\/(?!redirector)[\w-]+\.googlevideo\.com\/initplayback(?:\?|$) url script-response-body https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/qx-ump-v0.2.0-beta1/scripts/youtube-ump-local-qx.js
