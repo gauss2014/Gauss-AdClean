@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.5 - 2026-11-17
+
+- Restore upstream per-card opaque protobuf pagead detection for browse only.
+  Do not blacklist whole field IDs, remove ordinary Shorts, or change player processing.
+- Log browse no-change counts locally to distinguish matching from filtering.
+- Add binary homepage fixtures for sponsored-first, normal-first, same-field
+  non-ad preservation, and next/search isolation. Real-device retest pending.
+
 ## 0.4.4 - 2026-11-17
 
 - Embed local-only YouTube protobuf ad filtering in the existing single subscription.

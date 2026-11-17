@@ -22,7 +22,24 @@ function cleanPlayer(message) {
     return removed;
 }
 
-function isKnownAdItem(item) {
+function hasOpaqueAdSignal(node) {
+    // Upstream's per-card protobuf fallback; never cache a field number as an ad.
+    const marker = [112, 97, 103, 101, 97, 100];
+    return d.list(node).some(field => {
+        const bytes = field.data;
+        if (field.wireType !== 2 || bytes.length < 1000) return false;
+        outer: for (let i = 0; i <= bytes.length - marker.length; i++) {
+            for (let j = 0; j < marker.length; j++) {
+                if (bytes[i + j] !== marker[j]) continue outer;
+            }
+            return true;
+        }
+        return false;
+    });
+}
+
+function isKnownAdItem(item, opaqueAds) {
+    if (opaqueAds && hasOpaqueAdSignal(item)) return true;
     const stack = [item];
     while (stack.length) {
         const node = stack.pop();
@@ -31,6 +48,8 @@ function isKnownAdItem(item) {
         if (typeof eml === 'string' && eml.split('|')[0] === 'inline_injection_entrypoint_layout.eml') {
             return true;
         }
+        const content = node.videoInfo?.videoContext?.videoContent;
+        if (opaqueAds && content && hasOpaqueAdSignal(content)) return true;
         for (const value of Object.values(node)) {
             if (value && typeof value === 'object') stack.push(value);
         }
@@ -38,7 +57,7 @@ function isKnownAdItem(item) {
     return false;
 }
 
-function cleanFeed(message) {
+function cleanFeed(message, opaqueAds = false) {
     let removed = 0;
     const stack = [message];
     while (stack.length) {
@@ -46,7 +65,7 @@ function cleanFeed(message) {
         if (!node || typeof node !== 'object' || node instanceof Uint8Array) continue;
         if (Array.isArray(node.richItemContents)) {
             node.richItemContents = node.richItemContents.filter(item => {
-                if (!isKnownAdItem(item)) return true;
+                if (!isKnownAdItem(item, opaqueAds)) return true;
                 removed++;
                 return false;
             });
@@ -77,7 +96,7 @@ function clean(route, message) {
         }
         return removed;
     }
-    return cleanFeed(message);
+    return cleanFeed(message, route === 'browse');
 }
 
 function execute() {
@@ -93,12 +112,12 @@ function execute() {
     const type = routes[route];
     const message = type.fromBinary(body);
     const removed = clean(route, message);
+    console.log('[GAUSS-YT-LOCAL] ' + route + ' removed=' + removed);
     if (!removed) return {};
     const headers = {...($response.headers || {})};
     for (const key of Object.keys(headers)) {
         if (/^(content-length|content-encoding)$/i.test(key)) delete headers[key];
     }
-    console.log('[GAUSS-YT-LOCAL] ' + route + ' removed=' + removed);
     return {body: type.toBinary(message), headers};
 }
 

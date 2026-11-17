@@ -112,3 +112,55 @@ test('no remote code, Worker, credentials, or Googlevideo MITM in module', () =>
     assert(!/\$httpClient|\$task|\$prefs|\$persistentStore|fetch\(/.test(inline));
     assert.equal(moduleText.split('\n').filter(line => line.startsWith('Gauss_YT_Local =')).length, 1);
 });
+
+function home(items) {
+    const message = routes.browse.create({content: {sectionListRenderer: {
+        sectionListSupportedRenderers: [{itemSectionRenderer: {richItemContents: items}}]
+    }}});
+    message.content.sectionListRenderer.sectionListSupportedRenderers[0]
+        .itemSectionRenderer.richItemContents = items;
+    return message;
+}
+function homeItems(message) {
+    return message.content.sectionListRenderer.sectionListSupportedRenderers[0]
+        .itemSectionRenderer.richItemContents;
+}
+function opaqueCard(marker, fieldNumber = 1999) {
+    const card = homeItems(home([{}]))[0];
+    const payload = new Uint8Array(1200);
+    payload.set(new TextEncoder().encode(marker), 50);
+    // Unknown length-delimited fields store the length prefix with their bytes.
+    const bytes = Uint8Array.from([0xb0, 0x09, ...payload]);
+    unknown.onRead('youtube.response.browse.RichItemContent', card, fieldNumber, 2, bytes);
+    return card;
+}
+test('homepage opaque sponsored first card removed through final binary script', () => {
+    const normal = opaqueCard('ordinary video');
+    const message = home([opaqueCard('/pagead/interaction'), normal]);
+    const result = execute('browse', routes.browse.toBinary(message));
+    const cards = homeItems(routes.browse.fromBinary(result.value.body));
+    assert.equal(cards.length, 1);
+    assert.deepEqual(unknown.list(cards[0]), unknown.list(normal));
+    assert(result.logs.includes('[GAUSS-YT-LOCAL] browse removed=1'));
+});
+test('homepage preserves ordinary first card and checks each opaque card independently', () => {
+    const normal = opaqueCard('ordinary first video');
+    const message = home([normal, opaqueCard('/pagead/interaction'), opaqueCard('same field, not ad')]);
+    const cards = homeItems(routes.browse.fromBinary(execute('browse', routes.browse.toBinary(message)).value.body));
+    assert.equal(cards.length, 2);
+    assert.deepEqual(unknown.list(cards[0]), unknown.list(normal));
+    const untouched = execute('browse', routes.browse.toBinary(home([normal])));
+    assert.equal(Object.keys(untouched.value).length, 0);
+    assert(untouched.logs.includes('[GAUSS-YT-LOCAL] browse removed=0'));
+});
+test('opaque fallback does not expand to next/search or small unknown fields', () => {
+    for (const route of ['next', 'search']) {
+        const message = {richItemContents: [opaqueCard('/pagead/interaction')]};
+        assert.equal(clean(route, message), 0);
+        assert.equal(message.richItemContents.length, 1);
+    }
+    const small = {};
+    unknown.onRead('youtube.response.browse.RichItemContent', small, 1999, 2,
+        Uint8Array.from([6, ...new TextEncoder().encode('pagead')]));
+    assert.equal(clean('browse', {richItemContents: [small]}), 0);
+});

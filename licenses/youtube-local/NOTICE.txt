@@ -17,6 +17,11 @@ Modified 2026-11-17:
 - Embedded all execution code inside the Shadowrocket candidate module.
 - Added binary-fixture tests for preservation, error pass-through and no network calls.
 
+Modified for integrated 0.4.5:
+- Restore upstream per-card unknown-protobuf pagead detection for browse only;
+  no persistent field-ID cache and no ordinary Shorts filtering.
+- Add homepage binary regression fixtures and local no-change counts.
+
 The Watch NoGeo test module is a separate derivative of the user's Gauss AdClean 0.4.3 delivery.
 It only removes Apple Geo rewriting and its MITM hostname, plus module update metadata.
 It retains the original fixed-version remote ad-script references. No weather fix is claimed yet.
