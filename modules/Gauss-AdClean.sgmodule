@@ -1,7 +1,7 @@
 #!name=Gauss AdClean
 #!desc=整合去广告与本地YouTube广告过滤；移除Apple地区改写，Watch天气待实测；保留原节点与证书
 #!author=Gauss2014 local audit
-#!version=0.4.7
+#!version=0.4.8
 #!homepage=https://github.com/Gauss2014/Gauss-AdClean
 #!url=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/modules/Gauss-AdClean.sgmodule
 
@@ -44,9 +44,10 @@ DOMAIN, hc-ssp.sm.cn, REJECT
 DOMAIN, kad.gotokeep.com, REJECT
 
 # Component: Gauss-YouTube-Local
-# Only these API hosts use TCP fallback for MITM; video CDN is untouched.
+# TCP fallback lets API filters and playback URL rules run.
 AND,((DOMAIN,youtubei.googleapis.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
 AND,((DOMAIN,youtubei-att.googleapis.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+AND,((DOMAIN-SUFFIX,googlevideo.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
 
 [URL Rewrite]
 # Component: Gauss-AdClean-Core
@@ -200,6 +201,11 @@ AND,((DOMAIN,youtubei-att.googleapis.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
 ^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/app\/(new)?na\/m\/getLaunchImageList(?:\?|$) - reject-dict
 ^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/base\/(new)?na\/m\/adInfo(?:\?|$) - reject-200
 
+# Component: Gauss-YouTube-Local
+# Adapted from akiralereal/shadowrocket-toolkit dist/youtube.module.
+# Limit oad to initplayback; preserve signed ctier parameters and video bodies.
+^https?://(?!redirector)[\w-]+\.googlevideo\.com/initplayback\?(?:[^#]*&)?oad(?:[=&]|$) _ reject-200
+
 [Body Rewrite]
 # Component: Gauss-AdClean-Advanced
 # 微博轻享版
@@ -287,4 +293,4 @@ Gauss_YT_Local = type=http-response,pattern=^https:\/\/(?:youtubei|youtubei-att)
 [MITM]
 enable = true
 h2 = true
-hostname = %APPEND% cloud.189.cn,zt-app.go189.cn,xyz.cnki.net,hdgateway.zto.com,appapi.huazhu.com,hweb-hotel.huazhu.com,hweb-manager.huazhu.com,3g.csair.com,api.hellobike.com,3pp.starbucks.com.cn,api.xiangji.qq.com,waimai-guide.ele.me,ecard.shenzhentong.com,list-app-m.i4.cn,p*.meituan.net,s3plus.meituan.net,wmapi.meituan.com,dynamicad.kfc.com.cn,res.kfc.com.cn,h5.qzone.qq.com,tianshu.qq.com,apps.api.ke.com,api-ios.zhipin.com,apm-ios.zhipin.com,se-api.djiits.com,bdsp-x.jd.com,dsp-x.jd.com,img*.360buyimg.com,api.weibo.cn,bootpreload.uve.weibo.com,weibointl.api.weibo.cn,api.pinduoduo.com,acs.m.taobao.com,guide-acs.m.taobao.com,act.vip.iqiyi.com,iface2.iqiyi.com,kjp.cupid.iqiyi.com,t7z.cupid.iqiyi.com,cards.iqiyi.com,capi.lkcoffee.com,m.lkcoffee.com,img0*.luckincoffeecdn.com,interface*.music.163.com,ipv4.music.163.com,www.meituan.com,img.meituan.net,sqt.meituan.com,cn-acs.m.cainiao.com,netflow-mtop.cainiao.com,acs.m.goofish.com,g-acs.m.goofish.com,shopping.ele.me,m5.amap.com,m5-zb.amap.com,center.amap.com,amap-aos-info-nogw.amap.com,ai.amap.com,api.gotokeep.com,gql-fed.reddit.com,gql.reddit.com,mp.weixin.qq.com,ad.12306.cn,api-sams.walmartmobile.cn,apiproxy.zuche.com,api.zhihu.com,g-acs.m.taobao.com,h5api.m.taobao.com,guide-acs.m.goofish.com,ossgw.alicdn.com,cloud.video.taobao.com,img.alicdn.com,gw.alicdn.com,heic.alicdn.com,flowplus.meituan.net,gw.m.goofish.com,gw.m.taobao.com,h5api.m.goofish.com,api.m.jd.com,kjimg*.360buyimg.com,ms.jr.jd.com,youtubei.googleapis.com,youtubei-att.googleapis.com
+hostname = %APPEND% cloud.189.cn,zt-app.go189.cn,xyz.cnki.net,hdgateway.zto.com,appapi.huazhu.com,hweb-hotel.huazhu.com,hweb-manager.huazhu.com,3g.csair.com,api.hellobike.com,3pp.starbucks.com.cn,api.xiangji.qq.com,waimai-guide.ele.me,ecard.shenzhentong.com,list-app-m.i4.cn,p*.meituan.net,s3plus.meituan.net,wmapi.meituan.com,dynamicad.kfc.com.cn,res.kfc.com.cn,h5.qzone.qq.com,tianshu.qq.com,apps.api.ke.com,api-ios.zhipin.com,apm-ios.zhipin.com,se-api.djiits.com,bdsp-x.jd.com,dsp-x.jd.com,img*.360buyimg.com,api.weibo.cn,bootpreload.uve.weibo.com,weibointl.api.weibo.cn,api.pinduoduo.com,acs.m.taobao.com,guide-acs.m.taobao.com,act.vip.iqiyi.com,iface2.iqiyi.com,kjp.cupid.iqiyi.com,t7z.cupid.iqiyi.com,cards.iqiyi.com,capi.lkcoffee.com,m.lkcoffee.com,img0*.luckincoffeecdn.com,interface*.music.163.com,ipv4.music.163.com,www.meituan.com,img.meituan.net,sqt.meituan.com,cn-acs.m.cainiao.com,netflow-mtop.cainiao.com,acs.m.goofish.com,g-acs.m.goofish.com,shopping.ele.me,m5.amap.com,m5-zb.amap.com,center.amap.com,amap-aos-info-nogw.amap.com,ai.amap.com,api.gotokeep.com,gql-fed.reddit.com,gql.reddit.com,mp.weixin.qq.com,ad.12306.cn,api-sams.walmartmobile.cn,apiproxy.zuche.com,api.zhihu.com,g-acs.m.taobao.com,h5api.m.taobao.com,guide-acs.m.goofish.com,ossgw.alicdn.com,cloud.video.taobao.com,img.alicdn.com,gw.alicdn.com,heic.alicdn.com,flowplus.meituan.net,gw.m.goofish.com,gw.m.taobao.com,h5api.m.goofish.com,api.m.jd.com,kjimg*.360buyimg.com,ms.jr.jd.com,youtubei.googleapis.com,youtubei-att.googleapis.com,-redirector*.googlevideo.com,*.googlevideo.com

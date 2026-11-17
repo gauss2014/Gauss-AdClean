@@ -1,12 +1,17 @@
 #!name=Gauss YouTube AdOnly
 #!desc=On-device response filtering; script pinned to our v0.4.7. No Worker or runtime network requests.
-#!version=0.4.7
+#!version=0.4.8
 # Derived from Maasea/sgmodule, Apache-2.0. See LICENSE and NOTICE.txt.
 [Rule]
-# Only these API hosts use TCP fallback for MITM; video CDN is untouched.
+# TCP fallback lets API filters and playback URL rules run.
 AND,((DOMAIN,youtubei.googleapis.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
 AND,((DOMAIN,youtubei-att.googleapis.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+AND,((DOMAIN-SUFFIX,googlevideo.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT
+[URL Rewrite]
+# Adapted from akiralereal/shadowrocket-toolkit dist/youtube.module.
+# Limit oad to initplayback; preserve signed ctier parameters and video bodies.
+^https?://(?!redirector)[\w-]+\.googlevideo\.com/initplayback\?(?:[^#]*&)?oad(?:[=&]|$) _ reject-200
 [Script]
 Gauss_YT_Local = type=http-response,pattern=^https:\/\/(?:youtubei|youtubei-att)\.googleapis\.com\/youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|get_watch)(?:\?.*)?$,requires-body=1,binary-body-mode=1,max-size=2097152,script-path=https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.7/scripts/youtube-response-cleanup.js
 [MITM]
-hostname = %APPEND% youtubei.googleapis.com,youtubei-att.googleapis.com
+hostname = %APPEND% youtubei.googleapis.com,youtubei-att.googleapis.com,-redirector*.googlevideo.com,*.googlevideo.com

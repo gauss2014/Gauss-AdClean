@@ -42,6 +42,50 @@ function execute(route, bytes, status = 200, host = 'youtubei.googleapis.com') {
     assert.equal(result.calls.length, 1);
     return {value: result.calls[0], logs: result.logs};
 }
+
+const playbackRules = moduleText.split('[URL Rewrite]')[1].split('\n[')[0]
+    .split('\n').filter(line => line.startsWith('(^https?://(?!redirector)') ||
+        line.startsWith('^https?://(?!redirector)'))
+    .map(line => {
+        const [pattern, replacement, action] = line.trim().split(/\s+/);
+        return {pattern: new RegExp(pattern), replacement, action};
+    });
+
+test('playback URL rules are present with TCP fallback and redirector exclusion', () => {
+    assert.equal(playbackRules.length, 1);
+    assert(moduleText.includes('AND,((DOMAIN-SUFFIX,googlevideo.com),(PROTOCOL,UDP),(DST-PORT,443)),REJECT'));
+    assert(moduleText.includes('-redirector*.googlevideo.com,*.googlevideo.com'));
+    assert(!rule.includes('googlevideo'));
+});
+test('signed ctier playback URLs are not rewritten', () => {
+    const url = 'https://rr4---sn-example.googlevideo.com/initplayback?id=123&ctier=L&foo=bar&sparams=id,ctier,foo&sig=abc';
+    assert(playbackRules.every(r => !r.pattern.test(url)));
+});
+test('oad reject requires the exact initplayback query key', () => {
+    const r = playbackRules[0];
+    assert.equal(r.action, 'reject-200');
+    for (const query of ['oad=1', 'id=123&oad=1&foo=2', 'id=123&oad']) {
+        assert(r.pattern.test('https://rr4---sn-example.googlevideo.com/initplayback?' + query));
+    }
+    for (const query of ['id=123&oadx=1', 'id=123&download=1', 'id=123#x&oad=1']) {
+        assert(!r.pattern.test('https://rr4---sn-example.googlevideo.com/initplayback?' + query));
+    }
+});
+test('normal video streams, unrelated hosts and redirectors are not rewritten', () => {
+    for (const host of ['rr4---sn-example.googlevideo.com', 'redirector.googlevideo.com',
+        'redirector-1.googlevideo.com', 'example.com', 'rr4.googlevideo.com.evil.test']) {
+        for (const path of ['videoplayback', 'dclk_video_ads', 'other']) {
+            const url = `https://${host}/${path}?id=123&ctier=L&oad=1&sparams=id,ctier,oad`;
+            assert(playbackRules.every(r => !r.pattern.test(url)), url);
+        }
+        if (host !== 'rr4---sn-example.googlevideo.com') {
+            const url = `https://${host}/initplayback?id=123&ctier=L&oad=1&sparams=id,ctier,oad`;
+            assert(playbackRules.every(r => !r.pattern.test(url)), url);
+        }
+    }
+    assert(!playbackRules[0].pattern.test('https://rr4.googlevideo.com/initplayback?id=123&ctier=L&foo=bar'));
+});
+
 function player() {
     const message = routes.player.create({
         adPlacements: [{}, {}], adSlots: [{}],
@@ -113,8 +157,8 @@ test('feed only removes known injection layout, preserves Shorts and unknown ite
     assert.equal(clean('browse', message), 1);
     assert.equal(message.nested.richItemContents.length, 2);
 });
-test('only own pinned script; no Worker, credentials, or Googlevideo MITM', () => {
-    assert(!/workers\.dev|ca-p12|ca-passphrase|hostname.*googlevideo/.test(moduleText));
+test('only own pinned script; no Worker or credentials', () => {
+    assert(!/workers\.dev|ca-p12|ca-passphrase/.test(moduleText));
     const component = fs.readFileSync(out + '/components/Gauss-YouTube-Local.sgmodule', 'utf8');
     assert.deepEqual(component.match(/script-path=[^,\s]+/g), ['script-path=' + scriptURL]);
     assert(!moduleText.includes('Compass_Coordinates'));

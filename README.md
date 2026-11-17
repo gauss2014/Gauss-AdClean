@@ -2,6 +2,19 @@
 
 自维护的 Shadowrocket 去广告模块。规则来自历史实测和公开规则维护者的接口线索；新增规则的离线测试不代表手机端已验证。仅引用本仓库固定版本的响应脚本，不包含 CA、私钥、Cookie、抓包或会员状态伪造。
 
+## 0.4.8 视频广告播放层补丁（待手机验证）
+
+原订阅地址不变。更新到0.4.8、重新连接小火箭，完全退出YouTube再打开视频。
+首页已由用户确认变快、暂未见广告；首页脚本仍固定v0.4.7，不改过滤逻辑。
+本次增加Googlevideo的UDP/443回退与MITM，排除redirector；只对
+`initplayback`采用参考模块的oad拒绝，不缓存或解析视频正文。
+未采用参考模块的ctier重定向：样例测试发现它会合并签名参数名，现保留原签名URL。
+规则参考：[akiralereal/shadowrocket-toolkit](https://github.com/akiralereal/shadowrocket-toolkit/blob/main/dist/youtube.module)。
+新版目标是带倒计时和跳过按钮的播放广告。最新请求DB没有CDN明文路径，
+因此这是待实机验证的覆盖补丁，尚未确认能消除本次广告；卡片留待后续确认。
+没有增加第三方数据转发。若出现视频黑屏或加载变慢，可回退
+`https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/v0.4.7/modules/Gauss-AdClean.sgmodule`。
+
 ## 0.4.7 YouTube脚本加载兼容修正
 
 原订阅地址不变。更新模块并重新应用配置后，彻底退出YouTube再重开测试。
@@ -9,7 +22,7 @@ YouTube改用 `script-path` 加载本仓库固定v0.4.7脚本，不再使用超�
 脚本下载后在手机本地处理响应，无Worker、遥测或运行时网络请求。
 过滤逻辑与0.4.6完全相同，保留2 MiB限制和原解密域名；本次只隔离加载方式这一变量。
 用户已反馈0.4.6首页广告仍可见并可点击。请求DB显示首页API已解密，但不含脚本执行结果；
-内联加载不兼容尚属待验证原因，0.4.7需要手机重新打开首页确认效果。
+用户随后确认0.4.7首页变快且暂未见广告；视频内倒计时广告仍存在。
 
 ## 0.4.6 YouTube搜索与相关推荐补漏（历史）
 

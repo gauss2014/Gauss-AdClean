@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.8 - 2026-11-17
+
+- Add Googlevideo TCP fallback and MITM, excluding redirector hosts. Adapt
+  the oad URL rule from the referenced akiralereal module, narrowed to
+  initplayback only; ordinary videoplayback bodies are not buffered or filtered.
+- Exclude the reference ctier redirect: its replacement joins adjacent signed
+  parameter names in a fixture. Preserve original signed playback URLs.
+- Keep the identical v0.4.7 homepage runtime and its 2 MiB cap. User confirms
+  faster homepage without observed ads, but countdown/skip video ads remain.
+- Exercise generated rules with matching and normal-playback exclusion cases.
+  This playback candidate requires phone validation; the request DB alone
+  does not expose the encrypted CDN paths or prove which mechanism served ads.
+
 ## 0.4.7 - 2026-11-17
 
 - Replace the oversized inline YouTube script with the identical runtime loaded
