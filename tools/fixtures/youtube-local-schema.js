@@ -19,6 +19,10 @@ function cleanPlayer(message) {
             message[key].length = 0;
         }
     }
+    if (message.playbackTracking?.pageadViewthroughconversion !== undefined) {
+        delete message.playbackTracking.pageadViewthroughconversion;
+        removed++;
+    }
     return removed;
 }
 
@@ -92,11 +96,11 @@ function clean(route, message) {
         let removed = 0;
         for (const entry of message.contents) {
             if (entry.player) removed += cleanPlayer(entry.player);
-            if (entry.next) removed += cleanFeed(entry.next);
+            if (entry.next) removed += cleanFeed(entry.next, true);
         }
         return removed;
     }
-    return cleanFeed(message, route === 'browse');
+    return cleanFeed(message, ['browse', 'next', 'search'].includes(route));
 }
 
 function execute() {

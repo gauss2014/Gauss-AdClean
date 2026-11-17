@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.6 - 2026-11-17
+
+- Extend per-card opaque pagead detection to search, next and nested get_watch
+  recommendations, without field-ID caching or ordinary Shorts removal.
+- Remove player pageadViewthroughconversion tracking while preserving other
+  playback tracking and original playback capabilities.
+- Keep the 2 MiB response limit and existing API-only MITM scope unchanged.
+- Add final-inline binary regression tests for each newly covered route and
+  tracking-only responses. Phone-side validation remains pending.
+
 ## 0.4.5 - 2026-11-17
 
 - Restore upstream per-card opaque protobuf pagead detection for browse only.

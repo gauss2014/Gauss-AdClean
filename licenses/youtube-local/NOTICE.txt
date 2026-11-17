@@ -17,6 +17,11 @@ Modified 2026-11-17:
 - Embedded all execution code inside the Shadowrocket candidate module.
 - Added binary-fixture tests for preservation, error pass-through and no network calls.
 
+Modified for integrated 0.4.6:
+- Extend per-card pagead detection to search, next and get_watch recommendations.
+- Remove pageadViewthroughconversion, preserving other player tracking fields.
+- Retain the 2 MiB response limit and API-only MITM scope.
+
 Modified for integrated 0.4.5:
 - Restore upstream per-card unknown-protobuf pagead detection for browse only;
   no persistent field-ID cache and no ordinary Shorts filtering.

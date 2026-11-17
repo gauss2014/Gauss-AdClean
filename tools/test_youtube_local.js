@@ -153,14 +153,55 @@ test('homepage preserves ordinary first card and checks each opaque card indepen
     assert.equal(Object.keys(untouched.value).length, 0);
     assert(untouched.logs.includes('[GAUSS-YT-LOCAL] browse removed=0'));
 });
-test('opaque fallback does not expand to next/search or small unknown fields', () => {
-    for (const route of ['next', 'search']) {
-        const message = {richItemContents: [opaqueCard('/pagead/interaction')]};
-        assert.equal(clean(route, message), 0);
-        assert.equal(message.richItemContents.length, 1);
-    }
+test('small unknown fields do not trigger opaque ad detection', () => {
     const small = {};
     unknown.onRead('youtube.response.browse.RichItemContent', small, 1999, 2,
         Uint8Array.from([6, ...new TextEncoder().encode('pagead')]));
     assert.equal(clean('browse', {richItemContents: [small]}), 0);
+});
+
+function feed(route, items) {
+    const content = home([]).content;
+    const message = routes[route].create(route === 'next' ? {content: {nextResult: {content}}} : {content});
+    const parent = route === 'next' ? message.content.nextResult.content : message.content;
+    parent.sectionListRenderer.sectionListSupportedRenderers[0].itemSectionRenderer.richItemContents = items;
+    return message;
+}
+function feedItems(route, message) {
+    const content = route === 'next' ? message.content.nextResult.content : message.content;
+    return homeItems({content});
+}
+for (const route of ['next', 'search']) {
+    test(route + ' filters each opaque ad and preserves same-field normal cards', () => {
+        const normal = opaqueCard('ordinary video');
+        const message = feed(route, [normal, opaqueCard('/pagead/interaction'), opaqueCard('another video')]);
+        const type = routes[route];
+        const result = execute(route, type.toBinary(message));
+        const cards = feedItems(route, type.fromBinary(result.value.body));
+        assert.equal(cards.length, 2);
+        assert.deepEqual(unknown.list(cards[0]), unknown.list(normal));
+        assert(result.logs.includes('[GAUSS-YT-LOCAL] ' + route + ' removed=1'));
+        const noAds = type.toBinary(feed(route, [normal]));
+        assert.equal(Object.keys(execute(route, noAds).value).length, 0);
+    });
+}
+test('get_watch filters opaque ads in nested next response', () => {
+    const type = routes.get_watch;
+    const message = type.create({contents: [{}]});
+    message.contents[0].next = feed('next', [opaqueCard('pagead'), opaqueCard('normal')]);
+    const result = type.fromBinary(execute('get_watch', type.toBinary(message)).value.body);
+    assert.equal(feedItems('next', result.contents[0].next).length, 1);
+});
+test('player removes only advertising tracking even without ad slots', () => {
+    const message = routes.player.create({playbackTracking: {
+        pageadViewthroughconversion: {}, videostatsPlaybackUrl: {},
+        videostatsWatchtimeUrl: {}
+    }});
+    unknown.onRead('youtube.response.player.PlaybackTracking', message.playbackTracking,
+        1999, 2, Uint8Array.from([3, 97, 98, 99]));
+    const before = routes.player.fromBinary(routes.player.toBinary(message));
+    const result = routes.player.fromBinary(execute('player', routes.player.toBinary(message)).value.body);
+    delete before.playbackTracking.pageadViewthroughconversion;
+    assert.deepEqual(result, before);
+    assert.equal(Object.keys(execute('player', routes.player.toBinary(result)).value).length, 0);
 });
