@@ -24,7 +24,8 @@ def capture_routing(path):
             section = line
         elif section == '[filter_local]' and active(line):
             rules.append(line)
-    assert rules and rules[-1] == 'final, HK'
+    assert rules and rules[-1] in {'final, HK', 'final, US'}
+    rules[-1] = 'final, US'
     validate_filters(rules)
     (SOURCE / 'base-routing.list').write_text('\n'.join(rules) + '\n')
 
@@ -57,15 +58,17 @@ def render():
             if kind == 'host-suffix':
                 protected_hosts.append('*.' + value)
     # Core Apple/weather routes and tested US AI exceptions precede generic ads.
-    protected = [s for s in base if s.endswith(', US') or s in {
+    protected = [s for s in base if (s.startswith('host') and s.endswith(', US')) or s in {
         'host-suffix, apple.com, direct', 'host-suffix, apple.com.cn, direct',
         'host-suffix, cdn-apple.com, direct'}]
     ads = active((ROOT / 'rules/Gauss-Ads-QX.list').read_text())
     ordered = list(dict.fromkeys(wechat + protected + ads + base))
     validate_filters(ordered)
-    assert ordered[-1] == 'final, HK'
+    assert ordered[-2:] == ['geoip, CN, direct', 'final, US']
+    # Match the online fallback even if an older local profile ends in HK.
+    ordered[-1:-1] = ['ip-cidr, 0.0.0.0/0, US', 'ip6-cidr, ::/0, US']
     routing = '\n'.join([
-        '# Gauss QX online routing v1. Policies required: US, HK.',
+        '# Gauss QX online routing. Proxy policy: US (DMIT).',
         '# inserted-resource=true; parser OFF; do not force one policy.',
         '# Order: WeChat compatibility, AI/Apple, ads, retained routing, fallback.',
         '# WeChat source: blackmatrix7/ios_rule_script (see components/qx-online).',

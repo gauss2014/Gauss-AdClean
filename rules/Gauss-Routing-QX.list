@@ -1,4 +1,4 @@
-# Gauss QX online routing v1. Policies required: US, HK.
+# Gauss QX online routing. Proxy policy: US (DMIT).
 # inserted-resource=true; parser OFF; do not force one policy.
 # Order: WeChat compatibility, AI/Apple, ads, retained routing, fallback.
 # WeChat source: blackmatrix7/ios_rule_script (see components/qx-online).
@@ -9559,4 +9559,6 @@ host-suffix, zz.bdstatic.com, direct
 host-suffix, zzdtec.com, direct
 host-suffix, zztfly.com, direct
 geoip, CN, direct
-final, HK
+ip-cidr, 0.0.0.0/0, US
+ip6-cidr, ::/0, US
+final, US

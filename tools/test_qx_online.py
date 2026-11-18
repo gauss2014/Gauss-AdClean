@@ -47,7 +47,10 @@ class OnlineTests(unittest.TestCase):
         for host in ['weather-data.apple.com', 'weatherkit.apple.com']:
             self.assertEqual(self.policy(host=host), 'direct', host)
         self.assertEqual(self.policy(ip='192.168.64.1'), 'direct')
-        self.assertEqual(self.policy(host='unlisted.invalid'), 'HK')
+        self.assertEqual(self.policy(host='unlisted.invalid'), 'US')
+        self.assertEqual(self.policy(ip='8.8.8.8'), 'US')
+        self.assertEqual(self.policy(ip='2001:4860:4860::8888'), 'US')
+        self.assertEqual(self.policy(ip='114.114.114.114', country='CN'), 'direct')
 
     def test_wechat_precedes_ads(self):
         for host in ['szextshort.weixin.qq.com', 'szfilehelper.weixin.qq.com',
