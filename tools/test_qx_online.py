@@ -80,13 +80,35 @@ class OnlineTests(unittest.TestCase):
 
     def test_rewrite_preserves_other_apps_and_yt(self):
         rows = active(self.rewrite)[1:]
-        for name in ['Gauss-Apps-QX.snippet', 'Gauss-YouTube-UMP-QX-TEST.snippet']:
+        for name in ['Gauss-Apps-QX.snippet', 'Gauss-YouTube-Enhance-QX.snippet']:
             for row in active((ROOT / 'modules' / name).read_text()):
                 if not row.startswith('hostname = ') and r'mp\.weixin\.qq\.com' not in row:
                     self.assertIn(row, rows)
         for row in rows:
             re.compile(row.split(' ', 1)[0])
         self.assertIn('qx-ump-v0.2.0-beta2', self.rewrite)
+
+    def test_youtube_urls(self):
+        rows = [s.split(' url ', 1) for s in active(self.rewrite) if ' url ' in s]
+        def actions(url):
+            return [action for rx, action in rows if re.search(rx, url)]
+        for route in ('browse','next','player','search','reel/reel_watch_sequence','guide','account/get_setting','get_watch'):
+            for host in ('youtubei','youtubei-att'):
+                matched = actions(f'https://{host}.googleapis.com/youtubei/v1/{route}?x=1')
+                self.assertEqual(len(matched), 1)
+                self.assertTrue(matched[0].endswith('/scripts/youtube-enhance-qx.js'))
+        for path in ('pagead/id','ptracking?x=a','api/stats/ads','api/stats/qoe?x=1&adcontext=x'):
+            self.assertEqual(actions('https://s.youtube.com/'+path), ['reject-200'])
+        self.assertEqual(actions('https://s.youtube.com/api/stats/qoe?v=1'), [])
+        base = 'https://r2.googlevideo.com/'
+        self.assertEqual(actions(base+'other?id=1&oad=1'), ['reject-200'])
+        self.assertEqual(actions(base+'videoplayback?id=1&oad=1'), [])
+        self.assertEqual(actions(base+'dclk_video_ads?id=1&oad=1'), [])
+        self.assertEqual(actions(base+'other?download=1'), [])
+        url = base+'other?id=x&ctier=L&foo=z&sparams=id,ctier,foo'
+        rx, action = next((rx, a) for rx,a in rows if a.startswith('302 ') and re.search(rx,url))
+        self.assertEqual(re.sub(rx, re.sub(r'\$(\d)',r'\\g<\1>',action[4:]),url),
+                         base+'other?id=x&foo=z&sparams=id,foo')
 
     def test_remote_entries_and_no_secrets(self):
         self.assertIn('inserted-resource=true', self.entries)

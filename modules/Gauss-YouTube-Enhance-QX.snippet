@@ -1,0 +1,9 @@
+# Embedded in Gauss-Rewrite. API enhancements run locally; UMP keeps its original handler.
+hostname = -redirector*.googlevideo.com,*.googlevideo.com,www.youtube.com,s.youtube.com,youtubei.googleapis.com,youtubei-att.googleapis.com
+^https?:\/\/(?:www|s)\.youtube\.com\/api\/stats\/ads(?:[/?]|$) url reject-200
+^https?:\/\/(?:www|s)\.youtube\.com\/(?:pagead|ptracking)(?:[/?]|$) url reject-200
+^https?:\/\/s\.youtube\.com\/api\/stats\/qoe\?(?:[^&#]*&)*adcontext(?:[=&]|$) url reject-200
+^https:\/\/(?:youtubei|youtubei-att)\.googleapis\.com\/youtubei\/v1\/(?:browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch)(?:\?.*)?$ url script-response-body https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/b780e9be561e787ceab71767794ca9e05fd5c430/scripts/youtube-enhance-qx.js
+^https:\/\/(?:youtubei|youtubei-att)\.googleapis\.com\/youtubei\/v1\/(?:log_event|config)(?:\?.*)?$ url script-request-header https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/qx-ump-v0.2.0-beta2/scripts/youtube-ump-local-qx.js
+^https:\/\/(?:youtubei|youtubei-att)\.googleapis\.com\/youtubei\/v1\/(?:log_event|config)(?:\?.*)?$ url script-response-body https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/qx-ump-v0.2.0-beta2/scripts/youtube-ump-local-qx.js
+^https:\/\/(?!redirector)[\w-]+\.googlevideo\.com\/initplayback(?:\?|$) url script-response-body https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/qx-ump-v0.2.0-beta2/scripts/youtube-ump-local-qx.js

@@ -77,7 +77,7 @@ def render():
     hosts = ['-' + h for h in dict.fromkeys(protected_hosts)]
     rewrites = []
     for name in ['Gauss-Apps-QX.snippet', 'Gauss-Video-Ads-QX.snippet', 'Gauss-Meituan-Mine-QX.snippet',
-                 'Gauss-YouTube-UMP-QX-TEST.snippet']:
+                 'Gauss-YouTube-Enhance-QX.snippet']:
         for line in active((ROOT / 'modules' / name).read_text()):
             if line.startswith('hostname = '):
                 hosts.extend(h.strip() for h in line.split('=', 1)[1].split(',')
@@ -88,7 +88,7 @@ def render():
     rewrite = '\n'.join([
         '# Gauss QX online rewrites v1. Parser OFF; replaces old Apps/YouTube resources.',
         '# WeChat HTTPS inspection and article-ad rewrites disabled for compatibility.',
-        '# YouTube remains beta2: countdown ads still reported on device.',
+        '# YouTube: pinned local API enhancements and UMP beta2; device outcome unverified.',
         'hostname = ' + ', '.join(dict.fromkeys(hosts)), *rewrites, ''])
     entries = '\n'.join([
         '# Replace the corresponding remote-resource sections; keep local nodes, policies and CA.',

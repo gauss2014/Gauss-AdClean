@@ -7,6 +7,11 @@ The builder extracts schema definitions only. The upstream network/client bootst
 is not present in the published bundle. Ad-only logic preserves the original
 Gauss filtering scope; UMP transport handling is added separately.
 
+The separate build-enhance.cjs uses the same pinned source for the YouTube
+API response handlers. It omits upstream HTTP/client adapters and uses a
+local QX wrapper for captions, PiP, background playback, guide and settings.
+Rebuild and verify with node build-enhance.cjs and node test-enhance.cjs.
+
 Runtime dependencies, pinned by package-lock.json:
 @noble/ciphers and @noble/hashes (MIT), @protobuf-ts/runtime (Apache-2.0),
 googlevideo (MIT), fflate (MIT), brotli.js (MIT; decoder Google Apache-2.0),
