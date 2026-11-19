@@ -67,7 +67,11 @@ class OnlineTests(unittest.TestCase):
     def test_meituan_exact_shark_hosts(self):
         for host in ['shark-mt.meituan.com', 'shark-default.meituan.com']:
             self.assertEqual(self.policy(host=host), 'reject')
-        for host in ['npay.meituan.com', 'shark-dp.meituan.com', 'mt-personalcenter.meituan.com']:
+        for host in ['shark-dp.meituan.com', 'httpdnsvip.meituan.com', 'mquic-a.meituan.com']:
+            self.assertEqual(self.policy(host=host), 'reject')
+        for ip in ['202.90.108.13', '2405:1480:3000:303b::303b']:
+            self.assertEqual(self.policy(ip=ip), 'reject')
+        for host in ['npay.meituan.com', 'mt-personalcenter.meituan.com']:
             self.assertEqual(self.policy(host=host), 'direct')
 
     def test_wechat_not_decrypted_or_rewritten(self):
@@ -119,7 +123,7 @@ class OnlineTests(unittest.TestCase):
                 self.assertNotIn(forbidden, content)
 
     def test_bili_search_results(self):
-        line, = [x for x in active(self.rewrite) if r'/v2\/search' in x]
+        line, = [x for x in active(self.rewrite) if r'/v2\/search(?:' in x]
         path, expr = line.split(' url jsonjq-response-body ', 1)
         base = 'https://app.bilibili.com/x/v2/search'
         for suffix in ('?keyword=example', '/type?page=2'):

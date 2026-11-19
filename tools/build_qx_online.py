@@ -62,8 +62,8 @@ def render():
         'host-suffix, apple.com, direct', 'host-suffix, apple.com.cn, direct',
         'host-suffix, cdn-apple.com, direct'}]
     ads = active((ROOT / 'rules/Gauss-Ads-QX.list').read_text())
-    shark_hosts = ['host, shark-mt.meituan.com, reject', 'host, shark-default.meituan.com, reject']
-    ordered = list(dict.fromkeys(wechat + protected + shark_hosts + ads + base))
+    mt_transport = active((SOURCE / 'meituan-transport.list').read_text())
+    ordered = list(dict.fromkeys(wechat + protected + mt_transport + ads + base))
     validate_filters(ordered)
     assert ordered[-2:] == ['geoip, CN, direct', 'final, US']
     # Match the online fallback even if an older local profile ends in HK.
