@@ -1,0 +1,6 @@
+# Request rules precede the existing YouTube response-body handlers.
+hostname = -redirector*.googlevideo.com, *.googlevideo.com, app.bilibili.com
+^https:\/\/(?!redirector)[\w-]+\.googlevideo\.com\/initplayback\?(?:[^&#]+&)*oad(?:[=&]|$) url reject-200
+^(https:\/\/(?!redirector)[\w-]+\.googlevideo\.com\/initplayback\?[^#]+?)&ctier=L(&[^#]+?),ctier,([^#]+)$ url 302 $1$2,$3
+^https:\/\/app\.bilibili\.com\/x\/v\d+\/splash\/(?:list|show|brand\/list)(?:\?|$) url reject-200
+^https:\/\/app\.bilibili\.com\/x\/v2\/feed\/index(?:\?|$) url jsonjq-response-body 'if (.data.items | type) == "array" then .data.items |= map(select(if type == "object" then (.ad_info == null and .card_goto != "ad_av" and .card_goto != "ad_web") else true end)) else . end'
