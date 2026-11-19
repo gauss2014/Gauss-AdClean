@@ -74,13 +74,23 @@ class OnlineTests(unittest.TestCase):
         for host in ['npay.meituan.com', 'mt-personalcenter.meituan.com']:
             self.assertEqual(self.policy(host=host), 'direct')
 
-    def test_wechat_not_decrypted_or_rewritten(self):
+    def test_wechat_article_only(self):
         hosts = active(self.rewrite)[0].split('=', 1)[1].strip().split(', ')
-        for host in ['mp.weixin.qq.com', 'szshort.weixin.qq.com', 'mmbiz.qpic.cn']:
+        self.assertEqual([p for p in hosts if fnmatch.fnmatchcase('mp.weixin.qq.com', p.lstrip('-'))], ['mp.weixin.qq.com'])
+        for host in ['szshort.weixin.qq.com', 'szfilehelper.weixin.qq.com', 'mmbiz.qpic.cn', 'wx.tenpay.com']:
             matches = [p for p in hosts if fnmatch.fnmatchcase(host, p.lstrip('-'))]
             self.assertTrue(matches, host)
             self.assertTrue(all(p.startswith('-') for p in matches), matches)
-        self.assertNotIn(r'mp\.weixin\.qq\.com', self.rewrite)
+        rules = [r.split(' url ',1) for r in active(self.rewrite) if ' url ' in r]
+        def actions(s):
+            return [act for rx, act in rules if re.search(rx, 'https://mp.weixin.qq.com/'+s)]
+        act, = actions('mp/getappmsgad?biz=x')
+        for path in ['s?__biz=x', 'mp/getappmsgad2', 'mp/relatedarticle', 'mp/masonryfeed']:
+            self.assertEqual(actions(path), [])
+        expr=act.split("'",1)[1][:-1]
+        for value, expected in [({'advertisement_info':[1], 'advertisement_num':1, 'keep':2},
+                                 {'advertisement_info':[], 'advertisement_num':0, 'keep':2}), ({'err':1},{'err':1})]:
+            self.assertEqual(json.loads(subprocess.check_output(['jq',expr],input=json.dumps(value).encode())),expected)
 
     def test_rewrite_preserves_other_apps_and_yt(self):
         rows = active(self.rewrite)[1:]

@@ -74,7 +74,11 @@ def render():
         '# Order: WeChat compatibility, AI/Apple, ads, retained routing, fallback.',
         '# WeChat source: blackmatrix7/ios_rule_script (see components/qx-online).',
         *ordered, ''])
-    hosts = ['-' + h for h in dict.fromkeys(protected_hosts)]
+    # A negative *.weixin.qq.com would also exclude the article host. Other
+    # WeChat hosts are never added as positives by the module loop below.
+    hosts = ['-' + h for h in dict.fromkeys(protected_hosts) if h != '*.weixin.qq.com']
+    hosts.extend(['-*short.weixin.qq.com', '-*long.weixin.qq.com',
+                  '-*filehelper.weixin.qq.com', 'mp.weixin.qq.com'])
     rewrites = []
     for name in ['Gauss-Apps-QX.snippet', 'Gauss-Video-Ads-QX.snippet', 'Gauss-Meituan-Mine-QX.snippet',
                  'Gauss-YouTube-Enhance-QX.snippet', 'Gauss-Reviewed-Apps-QX.snippet']:
@@ -84,10 +88,12 @@ def render():
                              if not any(fnmatch.fnmatchcase(h.strip(), p) for p in protected_hosts))
             elif r'mp\.weixin\.qq\.com' not in line:
                 rewrites.append(line)
+    # Skip the old multi-path article rule above: only the ad response is in scope.
+    rewrites.append(r"""^https:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad\/?(?:\?|$) url jsonjq-response-body 'if type == "object" then (if (.advertisement_info | type) == "array" then .advertisement_info=[] else . end) | (if has("advertisement_num") then .advertisement_num=0 else . end) else . end'""")
     rewrites = list(dict.fromkeys(rewrites))
     rewrite = '\n'.join([
         '# Gauss QX online rewrites v1. Parser OFF; replaces old Apps/YouTube resources.',
-        '# WeChat HTTPS inspection and article-ad rewrites disabled for compatibility.',
+        '# WeChat: only mp.weixin.qq.com is inspected, for the article ad endpoint.',
         '# YouTube: pinned local API enhancements and UMP beta2; device outcome unverified.',
         'hostname = ' + ', '.join(dict.fromkeys(hosts)), *rewrites, ''])
     entries = '\n'.join([
