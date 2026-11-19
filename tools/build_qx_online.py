@@ -88,6 +88,8 @@ def render():
                              if not any(fnmatch.fnmatchcase(h.strip(), p) for p in protected_hosts))
             elif r'mp\.weixin\.qq\.com' not in line:
                 rewrites.append(line)
+    # X home diagnostic: same four hosts as the previous trial, no X rewrite.
+    hosts.extend(['api.x.com', 'api.twitter.com', 'x.com', 'twitter.com'])
     # Skip the old multi-path article rule above: only the ad response is in scope.
     rewrites.append(r"""^https:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad\/?(?:\?|$) url jsonjq-response-body 'if type == "object" then (if (.advertisement_info | type) == "array" then .advertisement_info=[] else . end) | (if has("advertisement_num") then .advertisement_num=0 else . end) else . end'""")
     rewrites = list(dict.fromkeys(rewrites))
