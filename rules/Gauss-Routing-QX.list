@@ -127,6 +127,8 @@ host-suffix, media-amazon.com, US
 host-suffix, images-amazon.com, US
 host-suffix, ssl-images-amazon.com, US
 host-suffix, amazon-press.jp, US
+host, shark-mt.meituan.com, reject
+host, shark-default.meituan.com, reject
 host, 1l-hit.mail.ru, reject
 host, 1l-hit.vkplay.ru, reject
 host, ad-channel.diwodiwo.xyz, reject

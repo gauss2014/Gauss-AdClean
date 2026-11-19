@@ -1,5 +1,5 @@
 # Optional QX filter_remote for one cold start; place before Meituan DIRECT.
-# Disable after testing. Not included in Gauss-Routing-QX.
+# Superseded by Gauss-Routing-QX. No separate subscription needed.
 # Exact host probes from ZenmoFeiShi/Qx MT.snippet; no IP, payment or DNS blocks.
 host, shark-mt.meituan.com, reject
 host, shark-default.meituan.com, reject

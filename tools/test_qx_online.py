@@ -64,6 +64,12 @@ class OnlineTests(unittest.TestCase):
         self.assertFalse(any(s.startswith('ip-asn,') for s in self.rules))
         self.assertEqual(self.policy(host='ad.qq.com'), 'reject')
 
+    def test_meituan_exact_shark_hosts(self):
+        for host in ['shark-mt.meituan.com', 'shark-default.meituan.com']:
+            self.assertEqual(self.policy(host=host), 'reject')
+        for host in ['npay.meituan.com', 'shark-dp.meituan.com', 'mt-personalcenter.meituan.com']:
+            self.assertEqual(self.policy(host=host), 'direct')
+
     def test_wechat_not_decrypted_or_rewritten(self):
         hosts = active(self.rewrite)[0].split('=', 1)[1].strip().split(', ')
         for host in ['mp.weixin.qq.com', 'szshort.weixin.qq.com', 'mmbiz.qpic.cn']:
