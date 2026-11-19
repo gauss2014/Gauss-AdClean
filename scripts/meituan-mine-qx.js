@@ -45,12 +45,17 @@
     if (url === 'https://apimobile.meituan.com/aggroup/indexTab') {
       const res = obj?.data?.resource, arr = res?.tabArea;
       if (Array.isArray(arr) && ['homepage','mine'].every(n => arr.some(t => t?.tabName === n))) {
-        const keep = arr.filter(t => t?.tabName !== 'xiaotuan');
+        const keep = arr.filter(t => !['xiaotuan', 'video'].includes(t?.tabName));
         tabs = arr.length - keep.length;
         if (tabs) res.tabArea = keep;
       }
     } else if (url === 'https://mt-personalcenter.meituan.com/usercenter/display') {
-      if (Array.isArray(obj?.children)) filterLayout(obj.children,0);
+      if (Array.isArray(obj?.children)) {
+        const keep = obj.children.filter(c => c?.name !== 'mine_cross_recommend');
+        promos += obj.children.length - keep.length;
+        obj.children = keep;
+        filterLayout(keep,0);
+      }
     } else return $done({});
     if (tabs || wallet || promos) {
       // Do not round long unquoted identifiers while serializing the display document.

@@ -1,5 +1,6 @@
 import { BinaryReader } from '@protobuf-ts/runtime';
 import { gunzipSync, gzipSync } from 'fflate';
+import { rewriteView } from './view.js';
 
 const limit = 2 * 1024 * 1024;
 const reader = buf => new BinaryReader(buf, {}); // No string decoding needed.
@@ -13,7 +14,7 @@ function adItem(buf) {
   }
   return ad;
 }
-function clean(body) {
+function clean(body, method) {
   if (body.length < 5 || body.length > limit) return {};
   const size = new DataView(body.buffer, body.byteOffset, body.byteLength).getUint32(1);
   if (size !== body.length - 5 || body[0] > 1) return {};
@@ -24,6 +25,10 @@ function clean(body) {
     if (n > limit) return {};
     msg = gunzipSync(msg, {out: new Uint8Array(n)});
     if (msg.length !== n) return {};
+  }
+  if (method !== 'bilibili.polymer.app.search.v1.Search/SearchAll') {
+    const changed = rewriteView(method, msg);
+    return changed ? frame(body[0], changed, 1) : {};
   }
   const r = reader(msg);
   const ranges = [];
@@ -43,9 +48,12 @@ function clean(body) {
   ranges.push(msg.subarray(start));
   let result = new Uint8Array(length + msg.length - start), off = 0;
   for (const slice of ranges) { result.set(slice, off); off += slice.length; }
-  if (body[0]) result = gzipSync(result);
+  return frame(body[0], result, removed);
+}
+function frame(flag, result, removed) {
+  if (flag) result = gzipSync(result);
   const framed = new Uint8Array(5 + result.length);
-  framed[0] = body[0];
+  framed[0] = flag;
   new DataView(framed.buffer).setUint32(1, result.length);
   framed.set(result, 5);
   return {removed, bodyBytes: framed.buffer};
@@ -53,8 +61,9 @@ function clean(body) {
 let change = {};
 let status = 'bypass';
 try {
-  if ($response.bodyBytes && /^https:\/\/(?:app\.bilibili\.com|grpc\.biliapi\.net)\/bilibili\.polymer\.app\.search\.v1\.Search\/SearchAll(?:\?|$)/.test($request.url)) {
-    const result = clean(new Uint8Array($response.bodyBytes));
+  const match = /^https:\/\/(?:app\.bilibili\.com|grpc\.biliapi\.net)\/(bilibili\.[\w.]+\/\w+)(?:\?|$)/.exec($request.url);
+  if ($response.bodyBytes && match) {
+    const result = clean(new Uint8Array($response.bodyBytes), match[1]);
     if (result.removed !== undefined) status = 'removed=' + result.removed;
     if (result.bodyBytes) change = {bodyBytes: result.bodyBytes};
   }

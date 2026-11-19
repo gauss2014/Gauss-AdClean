@@ -20,6 +20,22 @@ const video=field(4,field(37,field(25,Buffer.from('广告设计教程'))));
 const ad=field(4,field(25,field(1,Buffer.from('广告'))));
 const page=field(11,buf([8,1])), future=field(400,buf([1,2,3]));
 const expected=buf(video,page,video,future);
+const base='https://grpc.biliapi.net/';
+const wrap=(fields, value)=>fields.reduceRight((b,f)=>field(f,b), value);
+for(const [method,bad,good] of [
+  ['bilibili.app.view.v1.View/View',field(10,field(28,[])),field(10,field(27,[]))],
+  ['bilibili.app.view.v1.View/TFInfo',field(2,[]),field(5,[])],
+  ['bilibili.community.service.dm.v1.DM/DmView',field(18,[]),field(3,[])],
+  ['bilibili.app.dynamic.v2.Dynamic/DynAll',field(3,[]),field(1,field(1,[8,14]))],
+  ['bilibili.app.viewunite.v1.View/View',wrap([7,3],[]),field(4,[])],
+]){
+  for(const zip of [true,false]){
+    const input=frame(buf(bad,good,future),zip), out=run(input,base+method);
+    assert.ok(out,method); const payload=zip?z.gunzipSync(out.subarray(5)):out.subarray(5);
+    assert.deepEqual(payload,buf(method.includes('viewunite')?field(7,[]):[],good,future));
+    assert.equal(run(frame(good,zip),base+method),undefined);
+  }
+}
 for(const gzip of [false,true]){
   const r=run(frame(buf(video,ad,page,ad,video,future),gzip));
   assert.equal(r[0],+gzip); assert.equal(r.readUInt32BE(1),r.length-5);
