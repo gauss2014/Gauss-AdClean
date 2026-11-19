@@ -1,6 +1,8 @@
 import fnmatch
 import ipaddress
+import json
 import re
+import subprocess
 import unittest
 
 from build_qx_online import ROOT, SOURCE, active, render, validate_filters
@@ -87,6 +89,29 @@ class OnlineTests(unittest.TestCase):
         for content in [self.routing, self.rewrite, self.entries]:
             for forbidden in ['password=', 'passphrase =', 'p12 =', 'vless=', 'reality-hex-shortid=']:
                 self.assertNotIn(forbidden, content)
+
+    def test_bili_search_results(self):
+        line, = [x for x in active(self.rewrite) if r'/v2\/search' in x]
+        path, expr = line.split(' url jsonjq-response-body ', 1)
+        base = 'https://app.bilibili.com/x/v2/search'
+        for suffix in ('?keyword=example', '/type?page=2'):
+            self.assertRegex(base + suffix, path)
+        for suffix in ('/defaultwords', '/suggest', '/square', '/typeahead'):
+            self.assertNotRegex(base + suffix, path)
+        keep = [{'title': '广告设计教程', 'badge': '视频', 'ad_info': {}},
+                {'title': '廣告制作', 'badge_style': {'text': '原创'}}, None]
+        ads = [{'badge': '广告'}, {'badge': {'text': '廣告'}},
+               {'badge_style': {'text': '广告'}}, {'goto': 'cm'}, {'is_ad': 1},
+               {'ad_info': {'creative_id': 123}}]
+        def apply(value):
+            return json.loads(subprocess.check_output(['jq', '-c', expr[1:-1]],
+                              input=json.dumps(value).encode()))
+        for key in ('item', 'items'):
+            data = {'page': 2, 'trackid': 'test', 'nav': [{'total': 12}]}
+            payload = {'code': 0, 'data': dict(data, **{key: keep[:1] + ads + keep[1:]})}
+            self.assertEqual(apply(payload), {'code': 0, 'data': dict(data, **{key: keep})})
+        for payload in ({'code': -1, 'data': {'item': ads}}, {'code': 0, 'data': {'items': {}}}):
+            self.assertEqual(apply(payload), payload)
 
     def test_generated_files_current(self):
         for name, content in [('rules/Gauss-Routing-QX.list', self.routing),
