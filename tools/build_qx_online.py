@@ -81,13 +81,15 @@ def render():
                   '-*filehelper.weixin.qq.com', 'mp.weixin.qq.com'])
     rewrites = []
     for name in ['Gauss-Apps-QX.snippet', 'Gauss-Video-Ads-QX.snippet', 'Gauss-Meituan-Mine-QX.snippet',
-                 'Gauss-YouTube-Enhance-QX.snippet', 'Gauss-Reviewed-Apps-QX.snippet', 'Gauss-X-Home-QX.snippet']:
+                 'Gauss-YouTube-Enhance-QX.snippet', 'Gauss-Reviewed-Apps-QX.snippet']:
         for line in active((ROOT / 'modules' / name).read_text()):
             if line.startswith('hostname = '):
                 hosts.extend(h.strip() for h in line.split('=', 1)[1].split(',')
                              if not any(fnmatch.fnmatchcase(h.strip(), p) for p in protected_hosts))
             elif r'mp\.weixin\.qq\.com' not in line:
                 rewrites.append(line)
+    # X host-only baseline: attaching a response probe disrupted the iOS feed.
+    hosts.extend(['api.x.com', 'api.twitter.com', 'x.com', 'twitter.com'])
     # Skip the old multi-path article rule above: only the ad response is in scope.
     rewrites.append(r"""^https:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad\/?(?:\?|$) url jsonjq-response-body 'if type == "object" then (if (.advertisement_info | type) == "array" then .advertisement_info=[] else . end) | (if has("advertisement_num") then .advertisement_num=0 else . end) else . end'""")
     rewrites = list(dict.fromkeys(rewrites))
