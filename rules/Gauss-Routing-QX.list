@@ -173,6 +173,8 @@ ip6-cidr, 2405:1480:3000:303b::303b/128, reject
 ip6-cidr, 2405:1480:1000:3::1e/128, reject
 ip6-cidr, 2405:1480:1000:4::15/128, reject
 ip6-cidr, 2402:4e00:40:40::2:373/128, reject
+host, s.1rtb.net, reject
+host, api-access.pangolin-sdk-toutiao.com, reject
 host, 1l-hit.mail.ru, reject
 host, 1l-hit.vkplay.ru, reject
 host, ad-channel.diwodiwo.xyz, reject
@@ -7089,7 +7091,6 @@ host-suffix, pangolin-hl.snssdk.com, direct
 host-suffix, pangolin-lf.snssdk.com, direct
 host-suffix, pangolin-lq.snssdk.com, direct
 host-suffix, pangolin-sdk-toutiao-b.com, direct
-host-suffix, pangolin-sdk-toutiao.com, direct
 host-suffix, pangolin-sdk-toutiao1.com, direct
 host-suffix, pangolin.snssdk.com, direct
 host-suffix, panplayable-toutiao-b.com, direct

@@ -40,7 +40,15 @@ class OnlineTests(unittest.TestCase):
                 ipaddress.ip_network(value)
 
     def test_original_rules_retained(self):
-        self.assertTrue(set(active((SOURCE / 'base-routing.list').read_text())) <= set(self.rules))
+        retained = set(active((SOURCE / 'base-routing.list').read_text()))
+        self.assertEqual(retained - set(self.rules), {'host-suffix, pangolin-sdk-toutiao.com, direct'})
+
+    def test_cainiao_splash_routing(self):
+        for host in ['s.1rtb.net', 'api-access.pangolin-sdk-toutiao.com']:
+            self.assertIn(f'host, {host}, reject', self.rules)
+            self.assertEqual(self.policy(host=host, country='CN'), 'reject')
+        for host in ['amdc.m.taobao.com', 'cn-acs.m.cainiao.com', 'other.1rtb.net']:
+            self.assertEqual(self.policy(host=host, country='CN'), 'direct')
 
     def test_ai_weather_lan_and_fallback(self):
         for host in ['chatgpt.com', 'api.openai.com', 'gemini.google.com',

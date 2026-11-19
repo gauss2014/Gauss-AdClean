@@ -71,7 +71,11 @@ def render():
         'host-suffix, cdn-apple.com, direct'}]
     ads = active((ROOT / 'rules/Gauss-Ads-QX.list').read_text())
     mt_transport = active((SOURCE / 'meituan-transport.list').read_text())
-    ordered = list(dict.fromkeys(wechat + protected + mt_transport + ads + base))
+    # Cainiao cold launch: avoid the conflicting legacy DIRECT suffix in QX.
+    cainiao_ads = ['host, s.1rtb.net, reject',
+                   'host, api-access.pangolin-sdk-toutiao.com, reject']
+    base = [s for s in base if s != 'host-suffix, pangolin-sdk-toutiao.com, direct']
+    ordered = list(dict.fromkeys(wechat + protected + mt_transport + cainiao_ads + ads + base))
     validate_filters(ordered)
     assert ordered[-2:] == ['geoip, CN, direct', 'final, US']
     # Match the online fallback even if an older local profile ends in HK.
