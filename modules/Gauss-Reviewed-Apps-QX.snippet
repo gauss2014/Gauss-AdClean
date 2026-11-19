@@ -1,0 +1,17 @@
+# Native-only subset of ddgksf2013 BiliBiliAds/Applet and ZenmoFeiShi MT.
+# Keep existing search, homepage and account handlers; no third-party scripts.
+hostname = api.bilibili.com, api.biliapi.net, api.live.bilibili.com, manga.bilibili.com, api.blibee.com, ucmp.sf-express.com, wx.mygolbs.com, feedguess.meituan.com, apimobile.meituan.com, mop.meituan.com, assistify.meituan.com
+^https:\/\/api\.bilibili\.com\/(?:pgc\/activity\/deliver\/material\/receive|x\/vip\/ads\/material\/report|pgc\/season\/player\/(?:ogv\/)?cards)\/?(?:\?|$) url reject-dict
+^https:\/\/manga\.bilibili\.com\/twirp\/comic\.v\d+\.Comic\/(?:Flash|ListFlash|GetActivityTab)\/?(?:\?|$) url reject-dict
+^https:\/\/api\.(?:bilibili\.com|biliapi\.net)\/pgc\/season\/app\/related\/recommend\/?(?:\?|$) url jsonjq-response-body 'if (.result.cards? | type) == "array" then .result.cards |= map(select((.type? | tostring) != "2")) else . end'
+^https:\/\/api\.live\.bilibili\.com\/xlive\/app-interface\/v2\/index\/feed\/?(?:\?|$) url jsonjq-response-body 'if (.data.card_list? | type) == "array" then .data.card_list |= map(select(.card_type? != "banner_v1")) else . end'
+^https:\/\/api\.live\.bilibili\.com\/xlive\/app-room\/v1\/index\/getInfoByRoom\/?(?:\?|$) url jsonjq-response-body 'if (.data? | type) == "object" then del(.data.activity_banner_info) | if (.data.shopping_info? | type) == "object" then .data.shopping_info.is_show = 0 else . end else . end'
+^https:\/\/api\.blibee\.com\/cvsnotify-api\/cvs\/notify\/app\/banner\/v\d+\/?(?:\?|$) url reject-200
+^https:\/\/ucmp\.sf-express\.com\/proxy\/operation-platform\/info-flow-adver\/query\/?(?:\?|$) url reject-200
+^https:\/\/wx\.mygolbs\.com\/WxBusServer\/ApiData\.do(?:\?|$) url jsonjq-response-body 'walk(if type == "object" then with_entries(if ((.key == "Ad" or .key == "Ad_ab") and .value == 1) then .value = 0 else . end) else . end)'
+^https:\/\/feedguess\.meituan\.com\/lycoris\/scene\/(?:gwc_feed1_2265|personalcenter_2154)\/?(?:\?|$) url jsonjq-response-body 'if (.data? | type) == "array" then .data = [] | .bottom = true else . end'
+^https:\/\/apimobile\.meituan\.com\/group\/v1\/deal\/searchpage\/defaultword\/?(?:\?|$) url jsonjq-response-body '(.searchIntroduceResponse? | (.defaultWordRes?.defaultWordItems?, .HotWordInfos?) | arrays) |= []'
+^https:\/\/apimobile\.meituan\.com\/group\/v1\/deal\/searchpage\/hotword\/city\/divide\/hotrecommend\/?(?:\?|$) url jsonjq-response-body '(.data?.segmentsV2[]?.hotwordSegments? | arrays) |= map(select(.pageName? != "EntranceHotwordsV2Hotwords" and .pageName? != "EntranceHotwordsV2ContentCard")) | (.data?.aiSearchBubble?.bubbleTexts? | arrays) |= []'
+^https:\/\/assistify\.meituan\.com\/assistant\/getAppClientHornConfig\/?(?:\?|$) url jsonjq-response-body '(.data? | strings) |= (. as $old | try (fromjson | if (.skills? | type) == "object" then .skills = {} | tojson else $old end) catch $old)'
+^https:\/\/mop\.meituan\.com\/mop\/entry\/shoppingCartEntry\/?(?:\?|$) url jsonjq-response-body '((., .data?) | (.resourcesMap?, .resource?) | .topBannerArea? | arrays) |= []'
+^https:\/\/mop\.meituan\.com\/api\/entryModule\/startupPicture\/?(?:\?|$) url jsonjq-response-body '((., .data?) | (.resourcesMap?, .resource?) | .startupPicArea? | arrays) |= []'
