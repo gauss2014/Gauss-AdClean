@@ -133,32 +133,33 @@ class OnlineTests(unittest.TestCase):
                          base+'other?id=x&foo=z&sparams=id,foo')
 
     def test_cainiao_actual_rules(self):
-        rows = [line.split(' url ',1) for line in active(self.rewrite) if ' url ' in line]
-        def actions(path, host='cn-acs.m.cainiao.com'):
-            return [a for pat,a in rows if re.search(pat,'https://'+host+'/gw/mtop.'+path+'/1.0/')]
-        def transform(path,payload):
-            action, = actions('cainiao.'+path)
-            return json.loads(subprocess.check_output(['jq','-c',action.split("'",1)[1][:-1]],
-                              input=json.dumps(payload).encode()))
-        keep = [None,42,{'type':'parcel'}]
-        noisy = keep+[{'type':'big_banner_area_v870'}, {'type':'todo_list_v860'}]
-        def page(xs):
-            return {'data':{'result':{'dataList':xs}}}
-        self.assertEqual(transform('nbpresentation.protocol.homepage.get.cn',page(noisy)), page(keep))
-        key = 'mtop.cainiao.nbpresentation.protocol.homepage.get.cn@3'
-        self.assertEqual(transform('nbpresentation.homepage.merge.get.cn',
-                         {'data':{key:page(noisy),'parcel':page(noisy)}}),
-                         {'data':{key:page(keep),'parcel':page(noisy)}})
-        self.assertEqual(transform('adkeyword.get',{'data':{'result':{'keyword':'k','adHotKeywords':['ad']}}}),
-                         {'data':{'result':{'keyword':'k','adHotKeywords':[]}}})
-        fields = {'vip':3,'parcel':{'id':'sample'}}
-        self.assertEqual(transform('app.e2e.engine.page.fetch',{'data':{'data':dict(fields,banner=4,activity=5,asset=1,wallet=2)}}),
-                         {'data':{'data':fields}})
-        self.assertFalse(actions('cainiao.guoguo.nbnetflow.ads.foo_home'))
+        rows = [line.split(' url ', 1) for line in active(self.rewrite) if ' url ' in line]
+        def actions(url):
+            return [a for pat, a in rows if re.search(pat, url)]
+        base = 'https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/scripts/'
+        self.assertEqual(actions('http://amdc.m.taobao.com/amdc/mobileDispatch?appkey=x'),
+                         ['script-response-body '+base+'amdc.js'])
+        self.assertIn('*.cainiao.com', active(self.rewrite)[0].split(' = ')[1].split(', '))
+        app = 'https://edge.cainiao.com/gw/mtop.cainiao.'
+        self.assertEqual(actions(app+'guoguo.nbnetflow.ads.index.cn'), ['reject-200'])
+        self.assertEqual(actions(app+'guoguo.nbnetflow.ads.foo_home'), [])
+        self.assertEqual(actions(app+'nbpresentation.homepage.merge.get.cn'),
+                         ['script-response-body '+base+'cainiao_json.js'])
         for h in ['guide-acs.m.taobao.com','acs4miniapp-inner.m.taobao.com']:
-            self.assertEqual(actions('cainiao.adx.flyad.getad',h), ['reject-dict'])
-            self.assertFalse(actions('cainiao.nbmensa.research.researchservice.consultmerge',h))
-        self.assertFalse(actions('cainiao.adkeyword.get','oauth.secure.pixiv.net'))
+            self.assertEqual(actions('https://'+h+'/gw/mtop.cainiao.nbmensa.research.researchservice.consultmerge'),
+                             ['reject-200'])
+        run = """const fs=require('fs'),vm=require('vm');
+        const [name,ua,url,body]=process.argv.slice(1);
+        vm.runInNewContext(fs.readFileSync(name,'utf8'),{$request:{url,headers:{'User-Agent':ua}},
+            $response:{body},$done:r=>process.stdout.write(JSON.stringify(r))});"""
+        def script(name, ua='', url='', body='{}'):
+            return json.loads(subprocess.check_output(['node','-e',run,str(ROOT/'scripts'/name),ua,url,body]))
+        for ua in ['Cainiao/1', 'AMap', 'Hema4iPhone']:
+            self.assertEqual(script('amdc.js',ua), {'body':'ddgksf2013'})
+        self.assertEqual(script('amdc.js','UnrelatedApp'), {})
+        out = script('cainiao_json.js',url=app+'app.e2e.engine.page.fetch',
+                     body=json.dumps({'data':{'data':{'wallet':1,'vip':2,'parcel':3}}}))
+        self.assertEqual(json.loads(out['body']), {'data':{'data':{'parcel':3}}})
 
     def test_remote_entries_and_no_secrets(self):
         self.assertIn('inserted-resource=true', self.entries)
