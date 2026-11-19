@@ -5,7 +5,7 @@ import re
 import subprocess
 import unittest
 
-from build_qx_online import ROOT, SOURCE, active, render, validate_filters
+from build_qx_online import CAINIAO_LEGACY, ROOT, SOURCE, active, render, validate_filters
 
 
 class OnlineTests(unittest.TestCase):
@@ -96,7 +96,7 @@ class OnlineTests(unittest.TestCase):
         rows = active(self.rewrite)[1:]
         for name in ['Gauss-Apps-QX.snippet', 'Gauss-YouTube-Enhance-QX.snippet']:
             for row in active((ROOT / 'modules' / name).read_text()):
-                if not row.startswith('hostname = ') and r'mp\.weixin\.qq\.com' not in row:
+                if not row.startswith('hostname = ') and r'mp\.weixin\.qq\.com' not in row and row not in CAINIAO_LEGACY:
                     self.assertIn(row, rows)
         for row in rows:
             re.compile(row.split(' ', 1)[0])
@@ -123,6 +123,34 @@ class OnlineTests(unittest.TestCase):
         rx, action = next((rx, a) for rx,a in rows if a.startswith('302 ') and re.search(rx,url))
         self.assertEqual(re.sub(rx, re.sub(r'\$(\d)',r'\\g<\1>',action[4:]),url),
                          base+'other?id=x&foo=z&sparams=id,foo')
+
+    def test_cainiao_actual_rules(self):
+        rows = [line.split(' url ',1) for line in active(self.rewrite) if ' url ' in line]
+        def actions(path, host='cn-acs.m.cainiao.com'):
+            return [a for pat,a in rows if re.search(pat,'https://'+host+'/gw/mtop.'+path+'/1.0/')]
+        def transform(path,payload):
+            action, = actions('cainiao.'+path)
+            return json.loads(subprocess.check_output(['jq','-c',action.split("'",1)[1][:-1]],
+                              input=json.dumps(payload).encode()))
+        keep = [{'type':'todo_list_v860'},None,42,{'type':'parcel'}]
+        noisy = keep+[{'type':'big_banner_area_v870'}]
+        def page(xs):
+            return {'data':{'result':{'dataList':xs}}}
+        self.assertEqual(transform('nbpresentation.protocol.homepage.get.cn',page(noisy)), page(keep))
+        key = 'mtop.cainiao.nbpresentation.protocol.homepage.get.cn@3'
+        self.assertEqual(transform('nbpresentation.homepage.merge.get.cn',
+                         {'data':{key:page(noisy),'parcel':page(noisy)}}),
+                         {'data':{key:page(keep),'parcel':page(noisy)}})
+        self.assertEqual(transform('adkeyword.get',{'data':{'result':{'keyword':'k','adHotKeywords':['ad']}}}),
+                         {'data':{'result':{'keyword':'k','adHotKeywords':[]}}})
+        fields = {'asset':1,'wallet':2,'vip':3}
+        self.assertEqual(transform('app.e2e.engine.page.fetch',{'data':{'data':dict(fields,banner=4,activity=5)}}),
+                         {'data':{'data':fields}})
+        self.assertFalse(actions('cainiao.guoguo.nbnetflow.ads.foo_home'))
+        for h in ['guide-acs.m.taobao.com','acs4miniapp-inner.m.taobao.com']:
+            self.assertEqual(actions('cainiao.adx.flyad.getad',h), ['reject-dict'])
+            self.assertFalse(actions('cainiao.nbmensa.research.researchservice.consultmerge',h))
+        self.assertFalse(actions('cainiao.adkeyword.get','oauth.secure.pixiv.net'))
 
     def test_remote_entries_and_no_secrets(self):
         self.assertIn('inserted-resource=true', self.entries)

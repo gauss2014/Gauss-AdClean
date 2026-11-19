@@ -8,6 +8,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'components/qx-online'
 BASE_URL = 'https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/main/'
+CAINIAO_LEGACY = {
+    r'^https?:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.adkeyword\.get url reject-dict',
+    r'^https?:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads url reject-dict',
+    r'^https?:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.nbpresentation\.(homepage\.merge|tabbar\.marketing)\.get url reject-dict',
+    r'^https?:\/\/guide-acs\.m\.taobao\.com\/gw\/mtop\.cainiao\.adx\.flyad\.getad url reject-dict',
+    r'^https?:\/\/guide-acs\.m\.taobao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads url reject-dict',
+    r'^https?:\/\/netflow-mtop\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads url reject-dict',
+}
 
 
 def active(text):
@@ -81,12 +89,13 @@ def render():
                   '-*filehelper.weixin.qq.com', 'mp.weixin.qq.com'])
     rewrites = []
     for name in ['Gauss-Apps-QX.snippet', 'Gauss-Video-Ads-QX.snippet', 'Gauss-Meituan-Mine-QX.snippet',
-                 'Gauss-YouTube-Enhance-QX.snippet', 'Gauss-Reviewed-Apps-QX.snippet']:
+                 'Gauss-YouTube-Enhance-QX.snippet', 'Gauss-Reviewed-Apps-QX.snippet',
+                 'Gauss-Cainiao-QX.snippet']:
         for line in active((ROOT / 'modules' / name).read_text()):
             if line.startswith('hostname = '):
                 hosts.extend(h.strip() for h in line.split('=', 1)[1].split(',')
                              if not any(fnmatch.fnmatchcase(h.strip(), p) for p in protected_hosts))
-            elif r'mp\.weixin\.qq\.com' not in line:
+            elif r'mp\.weixin\.qq\.com' not in line and line not in CAINIAO_LEGACY:
                 rewrites.append(line)
     # Skip the old multi-path article rule above: only the ad response is in scope.
     rewrites.append(r"""^https:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad\/?(?:\?|$) url jsonjq-response-body 'if type == "object" then (if (.advertisement_info | type) == "array" then .advertisement_info=[] else . end) | (if has("advertisement_num") then .advertisement_num=0 else . end) else . end'""")

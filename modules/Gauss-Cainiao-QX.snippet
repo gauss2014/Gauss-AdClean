@@ -1,0 +1,10 @@
+# Cainiao endpoints: ddgksf2013/Rewrite AdBlock/CainiaoAds.conf and ddgksf2013/Scripts cainiao_json.js.
+# Native QX filters. Keep parcel tasks, account assets and wallet; leave AMDC/consent alone.
+hostname = cn-acs.m.cainiao.com, netflow-mtop.cainiao.com, guide-acs.m.taobao.com, acs4miniapp-inner.m.taobao.com
+^https?:\/\/(?:cn-acs\.m|netflow-mtop)\.cainiao\.com\/gw\/mtop\.cainiao\.app\.e2e\.engine\.page\.fetch(?:[/?]|$) url jsonjq-response-body 'if (.data?.data? | type) == "object" then del(.data.data.banner,.data.data.activity) else . end'
+^https?:\/\/(?:cn-acs\.m|netflow-mtop)\.cainiao\.com\/gw\/mtop\.cainiao\.nbpresentation\.protocol\.homepage\.get\.cn(?:[/?]|$) url jsonjq-response-body 'if (.data?.result?.dataList? | type) == "array" then .data.result.dataList |= map(select(if type == "object" then .type != "big_banner_area_v870" else true end)) else . end'
+^https?:\/\/(?:cn-acs\.m|netflow-mtop)\.cainiao\.com\/gw\/mtop\.cainiao\.nbpresentation\.homepage\.merge\.get\.cn(?:[/?]|$) url jsonjq-response-body 'if (.data? | type) == "object" then .data |= with_entries(if (.key | test("^mtop\\.cainiao\\.nbpresentation\\.protocol\\.homepage\\.get\\.cn@[0-9]+$")) and (.value.data?.result?.dataList? | type) == "array" then .value.data.result.dataList |= map(select(if type == "object" then .type != "big_banner_area_v870" else true end)) else . end) else . end'
+^https?:\/\/(?:cn-acs\.m|netflow-mtop)\.cainiao\.com\/gw\/mtop\.cainiao\.adkeyword\.get(?:\.cn)?(?:[/?]|$) url jsonjq-response-body 'if (.data?.result?.adHotKeywords? | type) == "array" then .data.result.adHotKeywords=[] else . end'
+^https?:\/\/(?:cn-acs\.m|netflow-mtop)\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads\.(?![^?#]*_home)[\w.]+(?:[/?]|$) url reject-dict
+^https?:\/\/(?:cn-acs\.m|netflow-mtop)\.cainiao\.com\/gw\/mtop\.cainiao\.(?:nbcps\.presentation\.fetch\.cn|app\.home\.v\d+\.bottom\.area|nbpresentation\.tabbar\.marketing\.get(?:\.cn)?)(?:[/?]|$) url reject-dict
+^https?:\/\/(?:guide-acs|acs4miniapp-inner)\.m\.taobao\.com\/gw\/mtop\.(?:cainiao\.(?:adx\.flyad\.getad|guoguo\.nbnetflow\.ads\.[\w.]+)|alimama\.abyss\.unionpage\.get)(?:[/?]|$) url reject-dict
