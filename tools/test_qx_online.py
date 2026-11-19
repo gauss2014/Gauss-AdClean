@@ -132,8 +132,8 @@ class OnlineTests(unittest.TestCase):
             action, = actions('cainiao.'+path)
             return json.loads(subprocess.check_output(['jq','-c',action.split("'",1)[1][:-1]],
                               input=json.dumps(payload).encode()))
-        keep = [{'type':'todo_list_v860'},None,42,{'type':'parcel'}]
-        noisy = keep+[{'type':'big_banner_area_v870'}]
+        keep = [None,42,{'type':'parcel'}]
+        noisy = keep+[{'type':'big_banner_area_v870'}, {'type':'todo_list_v860'}]
         def page(xs):
             return {'data':{'result':{'dataList':xs}}}
         self.assertEqual(transform('nbpresentation.protocol.homepage.get.cn',page(noisy)), page(keep))
@@ -143,8 +143,8 @@ class OnlineTests(unittest.TestCase):
                          {'data':{key:page(keep),'parcel':page(noisy)}})
         self.assertEqual(transform('adkeyword.get',{'data':{'result':{'keyword':'k','adHotKeywords':['ad']}}}),
                          {'data':{'result':{'keyword':'k','adHotKeywords':[]}}})
-        fields = {'asset':1,'wallet':2,'vip':3}
-        self.assertEqual(transform('app.e2e.engine.page.fetch',{'data':{'data':dict(fields,banner=4,activity=5)}}),
+        fields = {'vip':3,'parcel':{'id':'sample'}}
+        self.assertEqual(transform('app.e2e.engine.page.fetch',{'data':{'data':dict(fields,banner=4,activity=5,asset=1,wallet=2)}}),
                          {'data':{'data':fields}})
         self.assertFalse(actions('cainiao.guoguo.nbnetflow.ads.foo_home'))
         for h in ['guide-acs.m.taobao.com','acs4miniapp-inner.m.taobao.com']:
