@@ -81,7 +81,7 @@ def render():
                   '-*filehelper.weixin.qq.com', 'mp.weixin.qq.com'])
     rewrites = []
     for name in ['Gauss-Apps-QX.snippet', 'Gauss-Video-Ads-QX.snippet', 'Gauss-Meituan-Mine-QX.snippet',
-                 'Gauss-YouTube-Enhance-QX.snippet', 'Gauss-Reviewed-Apps-QX.snippet', 'Gauss-X-Home-QX.snippet']:
+                 'Gauss-YouTube-Enhance-QX.snippet', 'Gauss-Reviewed-Apps-QX.snippet']:
         for line in active((ROOT / 'modules' / name).read_text()):
             if line.startswith('hostname = '):
                 hosts.extend(h.strip() for h in line.split('=', 1)[1].split(',')
