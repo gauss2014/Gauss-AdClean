@@ -1,0 +1,3 @@
+# Personal page display only; no payment, orders or repayment endpoints.
+hostname = apimobile.meituan.com, mt-personalcenter.meituan.com
+^https:\/\/(?:apimobile\.meituan\.com\/aggroup\/indexTab|mt-personalcenter\.meituan\.com\/usercenter\/display)\/?(?:\?|$) url script-response-body https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/5f68699de5037ff241e44a37bb981e45ef5f3269/scripts/meituan-mine-qx.js

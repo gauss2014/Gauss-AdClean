@@ -75,7 +75,7 @@ def render():
         *ordered, ''])
     hosts = ['-' + h for h in dict.fromkeys(protected_hosts)]
     rewrites = []
-    for name in ['Gauss-Apps-QX.snippet', 'Gauss-Video-Ads-QX.snippet',
+    for name in ['Gauss-Apps-QX.snippet', 'Gauss-Video-Ads-QX.snippet', 'Gauss-Meituan-Mine-QX.snippet',
                  'Gauss-YouTube-UMP-QX-TEST.snippet']:
         for line in active((ROOT / 'modules' / name).read_text()):
             if line.startswith('hostname = '):
