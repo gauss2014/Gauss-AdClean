@@ -1,6 +1,6 @@
 # Request rules precede the existing YouTube response-body handlers.
 hostname = -redirector*.googlevideo.com, *.googlevideo.com, app.bilibili.com, grpc.biliapi.net
-^https:\/\/(?:grpc\.biliapi\.net|app\.bilibili\.com)\/bilibili\.polymer\.app\.search\.v1\.Search\/SearchAll(?:\?|$) url script-response-body https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/99d6d85a85f0705e18337d1c802ec8a2d82ddc4b/scripts/bili-search-qx.js
+^https:\/\/(?:grpc\.biliapi\.net|app\.bilibili\.com)\/bilibili\.polymer\.app\.search\.v1\.Search\/SearchAll(?:\?|$) url script-response-body https://raw.githubusercontent.com/Gauss2014/Gauss-AdClean/38ff9293027c6887556f7a5cbc5ca3aef351b957/scripts/bili-search-qx.js
 ^https?:\/\/(?!redirector)[\w-]+\.googlevideo\.com\/(?!(?:dclk_video_ads|videoplayback)(?:[/?]|$))[^?#]*\?(?:[^&#]*&)*oad(?:[=&]|$) url reject-200
 ^(https?:\/\/(?!redirector)[\w-]+\.googlevideo\.com\/(?!dclk_video_ads)[^?#]*\?[^#]+?)&ctier=L(&[^#]+?),ctier,([^#]+)$ url 302 $1$2,$3
 ^https:\/\/app\.bilibili\.com\/x\/v\d+\/splash\/(?:list|show|brand\/list)(?:\?|$) url reject-200

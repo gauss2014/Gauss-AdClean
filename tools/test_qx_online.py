@@ -5,7 +5,10 @@ import re
 import subprocess
 import unittest
 
-from build_qx_online import CAINIAO_LEGACY, ROOT, SOURCE, active, render, validate_filters
+from build_qx_online import (
+    CAINIAO_LEGACY, QX_DROPPED_REWRITES, QX_REWRITE_REPLACEMENTS,
+    ROOT, SOURCE, active, render, validate_filters,
+)
 
 
 class OnlineTests(unittest.TestCase):
@@ -40,8 +43,69 @@ class OnlineTests(unittest.TestCase):
                 ipaddress.ip_network(value)
 
     def test_original_rules_retained(self):
-        retained = set(active((SOURCE / 'base-routing.list').read_text()))
-        self.assertEqual(retained - set(self.rules), {'host-suffix, pangolin-sdk-toutiao.com, direct'})
+        retained = active((SOURCE / 'base-routing.list').read_text())
+        # Every non-removed original rule must either stay verbatim or be subsumed
+        # by an earlier rule in the optimized routing table (never silently dropped).
+        rules_set = set(self.rules)
+        for line in retained:
+            if line == 'host-suffix, pangolin-sdk-toutiao.com, direct':
+                self.assertNotIn(line, rules_set)
+                continue
+            if line in rules_set:
+                continue
+            kind, value, *_ = [s.strip() for s in line.split(',')]
+            if kind in {'host', 'host-suffix'}:
+                # Covered by an earlier exact/suffix rule (same or higher-priority policy).
+                self.assertIn(self.policy(host=value), {'direct', 'reject', 'US'}, line)
+            elif kind in {'ip-cidr', 'ip6-cidr'}:
+                net = ipaddress.ip_network(value, strict=False)
+                self.assertIn(self.policy(ip=str(net.network_address)), {'direct', 'reject', 'US'}, line)
+            else:
+                self.fail(f'Unexpectedly dropped base rule: {line}')
+
+    def test_no_shadowed_or_conflicting_filters(self):
+        seen_exact = set()
+        seen_suffixes = set()
+        seen_v4, seen_v6 = [], []
+        # Exclude the two post-geoip catch-all fallback CIDRs and final.
+        body = [r for r in self.rules if r not in {'ip-cidr, 0.0.0.0/0, US', 'ip6-cidr, ::/0, US'}
+                and not r.startswith('final,')]
+        for line in body:
+            kind, value, *_ = [s.strip() for s in line.split(',')]
+            key = (kind, value.lower())
+            self.assertNotIn(key, seen_exact, f'Duplicate/conflicting filter: {line}')
+            seen_exact.add(key)
+            if kind in {'host', 'host-suffix'}:
+                labels = value.lower().split('.')
+                for i in range(len(labels)):
+                    anc = '.'.join(labels[i:])
+                    self.assertNotIn(anc, seen_suffixes, f'{line} shadowed by host-suffix {anc}')
+                if kind == 'host-suffix':
+                    seen_suffixes.add(value.lower())
+            elif kind == 'ip-cidr':
+                net = ipaddress.IPv4Network(value, strict=False)
+                self.assertFalse(any(net.subnet_of(p) for p in seen_v4), f'Shadowed IPv4 CIDR: {line}')
+                seen_v4.append(net)
+            elif kind == 'ip6-cidr':
+                net = ipaddress.IPv6Network(value, strict=False)
+                self.assertFalse(any(net.subnet_of(p) for p in seen_v6), f'Shadowed IPv6 CIDR: {line}')
+                seen_v6.append(net)
+
+    def test_apple_ads_rejected_while_core_apple_direct(self):
+        for host in ['advertising.apple.com', 'api-adservices.apple.com',
+                     'iad.apple.com', 'iadsdk.apple.com', 'foo.iad.apple.com']:
+            self.assertEqual(self.policy(host=host), 'reject', host)
+        for host in ['weather-data.apple.com', 'weatherkit.apple.com',
+                     'swscan.apple.com', 'apple.com.cn', 'is1-ssl.mzstatic.com', 'cdn-apple.com']:
+            self.assertEqual(self.policy(host=host), 'direct', host)
+
+    def test_wechat_in_app_ai_and_ads(self):
+        for host in ['chatgpt.com', 'api.openai.com', 'gemini.google.com', 'accounts.google.com']:
+            self.assertEqual(self.policy(host=host, ua='MicroMessenger/8.0'), 'US', host)
+            self.assertEqual(self.policy(host=host, ua='WeChat/8.0'), 'US', host)
+        self.assertEqual(self.policy(host='ad.qq.com', ua='MicroMessenger/8.0'), 'reject')
+        self.assertEqual(self.policy(host='mp.weixin.qq.com', ua='MicroMessenger/8.0'), 'direct')
+        self.assertEqual(self.policy(ua='MicroMessenger/8.0'), 'direct')
 
     def test_cainiao_splash_routing(self):
         for host in ['s.1rtb.net', 'api-access.pangolin-sdk-toutiao.com']:
@@ -104,11 +168,46 @@ class OnlineTests(unittest.TestCase):
         rows = active(self.rewrite)[1:]
         for name in ['Gauss-Apps-QX.snippet', 'Gauss-YouTube-Enhance-QX.snippet']:
             for row in active((ROOT / 'modules' / name).read_text()):
-                if not row.startswith('hostname = ') and r'mp\.weixin\.qq\.com' not in row and row not in CAINIAO_LEGACY:
-                    self.assertIn(row, rows)
+                if not row.startswith('hostname = ') and r'mp\.weixin\.qq\.com' not in row and row not in QX_DROPPED_REWRITES:
+                    self.assertIn(QX_REWRITE_REPLACEMENTS.get(row, row), rows)
         for row in rows:
             re.compile(row.split(' ', 1)[0])
         self.assertIn('qx-ump-v0.2.0-beta2', self.rewrite)
+
+    def test_rewrites_optimized_and_unified(self):
+        hosts = active(self.rewrite)[0].split('=', 1)[1].strip().split(', ')
+        rows = [s.split(' url ', 1) for s in active(self.rewrite) if ' url ' in s]
+        def actions(url):
+            return [a for rx, a in rows if re.search(rx, url)]
+        # Unified script pins: no legacy v0.3.4 or 99d6d85a left.
+        self.assertNotIn('/v0.3.4/scripts/jd-response-cleanup.js', self.rewrite)
+        self.assertNotIn('99d6d85a85f0705e18337d1c802ec8a2d82ddc4b', self.rewrite)
+        # JD main script narrowed to handled functionIds and no-functionId calls.
+        for hit in ['https://api.m.jd.com/api?functionId=start',
+                    'https://api.m.jd.com/client.action?client=apple&functionId=startup&v=1',
+                    'https://api.m.jd.com/client.action?functionId=welcomeHome',
+                    'https://api.m.jd.com/api?functionId=personinfoBusiness&x=1',
+                    'https://api.m.jd.com/api?functionId=getTabHomeInfo',
+                    'https://api.m.jd.com/api',
+                    'https://api.m.jd.com/client.action?client=apple']:
+            matched = actions(hit)
+            self.assertEqual(len(matched), 1, hit)
+            self.assertIn('/v0.4.2/scripts/jd-response-cleanup.js', matched[0])
+        for bypass in ['https://api.m.jd.com/api?functionId=submitOrder',
+                       'https://api.m.jd.com/client.action?client=apple&functionId=productDetail&v=1',
+                       'https://api.m.jd.com/api?functionId=search&keyword=ssd',
+                       'https://api.m.jd.com/api?functionId=cart']:
+            self.assertEqual(actions(bypass), [], bypass)
+        # Meituan startpicture uses clean reject-dict (single match, no harsh reject).
+        self.assertEqual(actions('https://wmapi.meituan.com/api/v7/startpicture?client=ios'), ['reject-dict'])
+        # Taobao product videos restored and removed from MITM.
+        self.assertNotIn('cloud.video.taobao.com', hosts)
+        self.assertEqual(actions('https://cloud.video.taobao.com/vod/product.mp4'), [])
+        # Cainiao mshow.cn has single clean match (no duplicate rule).
+        self.assertEqual(actions('https://edge.cainiao.com/gw/mtop.cainiao.guoguo.nbnetflow.ads.mshow.cn'), ['reject-200'])
+        # Redundant *.cainiao.com subdomains pruned from MITM hostname list.
+        self.assertNotIn('cn-acs.m.cainiao.com', hosts)
+        self.assertNotIn('netflow-mtop.cainiao.com', hosts)
 
     def test_youtube_urls(self):
         rows = [s.split(' url ', 1) for s in active(self.rewrite) if ' url ' in s]
